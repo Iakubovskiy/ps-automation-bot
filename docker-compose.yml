@@ -1,0 +1,10 @@
+services:
+  bot:
+    build: .
+    container_name: prosta_stal_bot
+    command: tail -f /dev/null
+    env_file:
+      - .env
+    volumes:
+      - ./credentials:/app/credentials:ro
+      - ./downloads:/app/downloads
