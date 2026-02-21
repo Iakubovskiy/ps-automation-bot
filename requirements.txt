@@ -1,3 +1,6 @@
+aiogram>=3.0,<4.0
+pydantic>=2.0
+pydantic-settings>=2.0
 gspread-asyncio>=2.0,<3.0
 google-genai
 aiogram==3.10.0

@@ -2,13 +2,21 @@
 import asyncio
 import logging
 import sys
+from pathlib import Path
 
 from aiogram import Bot, Dispatcher
 from aiogram.client.default import DefaultBotProperties
 from aiogram.enums import ParseMode
 
-from src.config import settings
-from src.handlers.collector import router as collector_router
+try:
+    from src.config import settings
+    from src.handlers.collector import router as collector_router
+except ModuleNotFoundError:
+    # Allow running as a script from the src/ directory.
+    project_root = Path(__file__).resolve().parents[1]
+    sys.path.append(str(project_root))
+    from src.config import settings
+    from src.handlers.collector import router as collector_router
 
 async def main() -> None:
     """Initialize and start the bot."""
