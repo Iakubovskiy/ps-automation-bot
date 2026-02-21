@@ -1,15 +1,15 @@
-version: '3.8'
-
 services:
   bot:
     build: .
     container_name: prostastal_collector
     restart: always
-    dns:
-      - 8.8.8.8
-      - 8.8.4.4
     env_file:
       - .env
     volumes:
       - ./media:/app/media
       - ./service_account.json:/app/service_account.json
+      - ./credentials:/app/credentials:ro
+      - ./downloads:/app/downloads
+      - ./src:/app/src
+    environment:
+      - GEMINI_API_KEY=${GEMINI_API_KEY}

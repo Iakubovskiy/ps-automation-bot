@@ -3,3 +3,4 @@ pydantic>=2.0
 pydantic-settings>=2.0
 gspread-asyncio>=2.0,<3.0
 google-auth>=2.0,<3.0
+google-generativeai>=0.5,<1.0
