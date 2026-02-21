@@ -5,6 +5,9 @@ services:
     build: .
     container_name: prostastal_collector
     restart: always
+    dns:
+      - 8.8.8.8
+      - 8.8.4.4
     env_file:
       - .env
     volumes:

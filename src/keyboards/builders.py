@@ -1,4 +1,5 @@
 """Module for building telegram keyboards."""
+from aiogram import types
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 from aiogram.types import InlineKeyboardMarkup
 from src.enums import SheathColor, MountType
@@ -19,6 +20,33 @@ def get_models_keyboard(models: list[str]) -> InlineKeyboardMarkup:
         builder.button(text=model, callback_data=f"model_{model}")
     builder.adjust(1)
     return builder.as_markup()
+
+def get_multi_select_keyboard(
+    enum_class, selected: set[str] | None = None
+) -> InlineKeyboardMarkup:
+    """Keyboard that allows toggling multiple options from an Enum.
+
+    Selected items are prefixed with ✅, unselected with ⬜.
+    The last row contains a 'Готово ➡️' button to confirm.
+    """
+    if selected is None:
+        selected = set()
+    builder = InlineKeyboardBuilder()
+    for item in enum_class:
+        prefix = "✅" if item.value in selected else "⬜"
+        builder.button(
+            text=f"{prefix} {item.value}",
+            callback_data=f"mtoggle_{item.value}",
+        )
+    builder.adjust(2)
+    # Confirmation row
+    builder.row(
+        types.InlineKeyboardButton(
+            text="Готово ➡️", callback_data="mount_done"
+        )
+    )
+    return builder.as_markup()
+
 
 def get_yes_no_keyboard() -> InlineKeyboardMarkup:
     """Simple Yes/No keyboard."""
