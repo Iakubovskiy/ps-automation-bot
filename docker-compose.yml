@@ -6,6 +6,8 @@ services:
     env_file:
       - .env
     volumes:
+      - ./media:/app/media
+      - ./service_account.json:/app/service_account.json
       - ./credentials:/app/credentials:ro
       - ./downloads:/app/downloads
       - ./src:/app/src

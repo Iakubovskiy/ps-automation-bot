@@ -15,6 +15,7 @@ env/
 
 # Environment variables
 .local-env
+.env
 
 # IDE
 .idea/
@@ -29,3 +30,4 @@ Thumbs.db
 # Google credentials
 *.json
 !package.json
+service_account.json
