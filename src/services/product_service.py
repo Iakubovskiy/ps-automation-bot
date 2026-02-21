@@ -1,4 +1,5 @@
 """Orchestrator service that combines Sheets data + Gemini AI into ProductData."""
+from src.dto.gemini_content_dto import GeminiContentDto
 from src.models.product_data import ProductData
 from src.repositories.product_repository import fetch_product_from_sheet
 from src.services.gemini_service import GeminiService
@@ -23,20 +24,20 @@ class ProductService:
 
         photo_links: list[str] = raw.pop("photo_links", [])
 
-        ai_content: dict = await self.gemini.generate_product_content(
+        ai_content: GeminiContentDto = await self.gemini.generate_content(
             specs=raw,
             photo_paths=photo_links,
         )
 
         return ProductData(
-            product_code=ai_content.get("product_code", ""),
-            title=ai_content.get("title", ""),
-            description=ai_content.get("description", ""),
-            meta_keywords=ai_content.get("meta_keywords", ""),
-            meta_description=ai_content.get("meta_description", ""),
-            etsy_title=ai_content.get("etsy_title", ""),
-            etsy_description=ai_content.get("etsy_description", ""),
-            etsy_tags=ai_content.get("etsy_tags", ""),
+            product_code=ai_content.product_code,
+            title=ai_content.title,
+            description=ai_content.description,
+            meta_keywords=ai_content.meta_keywords,
+            meta_description=ai_content.meta_description,
+            etsy_title=ai_content.etsy_title,
+            etsy_description=ai_content.etsy_description,
+            etsy_tags=ai_content.etsy_tags,
             photo_links=photo_links,
             price=raw.get("price", ""),
             blade_type=raw.get("blade_type", ""),

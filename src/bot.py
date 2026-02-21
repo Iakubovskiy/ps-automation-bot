@@ -12,7 +12,6 @@ from src.handlers.collector import router as collector_router
 
 async def main() -> None:
     """Initialize and start the bot."""
-    # Налаштування логування для Pylint-friendly коду
     logging.basicConfig(
         level=logging.INFO,
         format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",

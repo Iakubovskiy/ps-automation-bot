@@ -8,8 +8,12 @@ Output is bilingual — Ukrainian and English.
 """
 import json
 import os
+from dataclasses import fields
 
-import google.generativeai as genai
+from google import genai
+
+from src.dto.gemini_content_dto import GeminiContentDto
+from src.services.ai_service import AiService
 
 MOCK_PROMPT = """\
 You are an expert product copywriter for a Ukrainian knife-making brand.
@@ -37,41 +41,21 @@ Generate the following fields in **both Ukrainian and English**
 Return your answer as a JSON object with exactly these keys.
 """
 
-AI_FIELDS = [
-    "product_code",
-    "title",
-    "description",
-    "meta_keywords",
-    "meta_description",
-    "etsy_title",
-    "etsy_description",
-    "etsy_tags",
-    "engraving_description",
-]
 
-
-class GeminiService:
+class GeminiService(AiService):
     """Wrapper around Google Gemini generative AI."""
 
-    def __init__(self, api_key: str | None = None):
-        key = api_key or os.getenv("GEMINI_API_KEY", "")
-        genai.configure(api_key=key)
-        self.model = genai.GenerativeModel("gemini-3-flash-preview")
+    def __init__(self):
+        api_key = os.getenv("GEMINI_API_KEY")
+        self.client = genai.Client(api_key=api_key)
+        self.model_name = "gemini-3-flash-preview"
 
-    async def generate_product_content(
-        self,
-        specs: dict,
-        photo_paths: list[str] | None = None,
-    ) -> dict:
-        """Call Gemini with product specs + photos and return AI fields.
-
-        Args:
-            specs: Dict of Google-Sheets product fields (price, steel, …).
-            photo_paths: Optional list of local file paths to product photos.
-
-        Returns:
-            Dict with keys from ``AI_FIELDS``.
-        """
+    async def generate_content(
+            self,
+            specs: dict,
+            photo_paths: list[str] | None = None,
+    ) -> GeminiContentDto:
+        """Call Gemini with product specs + photos and return AI fields."""
         parts: list = [
             MOCK_PROMPT,
             f"\nProduct specs:\n```json\n{json.dumps(specs, ensure_ascii=False, indent=2)}\n```",
@@ -79,21 +63,25 @@ class GeminiService:
 
         if photo_paths:
             for path in photo_paths:
-                uploaded = genai.upload_file(path)
+                uploaded = self.client.files.upload(file=path)
                 parts.append(uploaded)
 
-        response = await self.model.generate_content_async(parts)
+        response = await self.client.aio.models.generate_content(
+            model=self.model_name,
+            contents=parts
+        )
 
         return self._parse_response(response.text)
 
-
-
     @staticmethod
-    def _parse_response(text: str) -> dict:
+    def _parse_response(text: str) -> GeminiContentDto:
         """Extract the JSON object from the model's response text."""
         cleaned = text.strip()
-        if cleaned.startswith("```"):
+        if cleaned.startswith("```json"):
             cleaned = cleaned.split("\n", 1)[1]
+        elif cleaned.startswith("```"):
+            cleaned = cleaned.split("\n", 1)[1]
+
         if cleaned.endswith("```"):
             cleaned = cleaned.rsplit("```", 1)[0]
 
@@ -102,4 +90,5 @@ class GeminiService:
         except json.JSONDecodeError:
             data = {}
 
-        return {key: data.get(key, "") for key in AI_FIELDS}
+        dto_fields = {f.name for f in fields(GeminiContentDto)}
+        return GeminiContentDto(**{key: data.get(key, "") for key in dto_fields})

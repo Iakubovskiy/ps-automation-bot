@@ -7,9 +7,8 @@ def get_enum_keyboard(enum_class) -> InlineKeyboardMarkup:
     """Generic function to create a keyboard from an Enum."""
     builder = InlineKeyboardBuilder()
     for item in enum_class:
-        # callback_data буде значенням з Enum (напр. "Чорний")
         builder.button(text=item.value, callback_data=item.value)
-    builder.adjust(2)  # Кнопки у два стовпчики
+    builder.adjust(2)
     return builder.as_markup()
 
 def get_models_keyboard(models: list[str]) -> InlineKeyboardMarkup:

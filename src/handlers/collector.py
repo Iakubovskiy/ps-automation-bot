@@ -24,7 +24,6 @@ async def cmd_start(message: types.Message, state: FSMContext) -> None:
         await message.answer("Помилка: Список моделей в таблиці порожній.")
         return
 
-    # Генеруємо UUID на самому початку
     item_uuid = generate_item_uuid()
     await state.update_data(item_uuid=item_uuid, photos=[])
     
