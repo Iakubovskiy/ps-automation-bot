@@ -8,3 +8,6 @@ services:
     volumes:
       - ./credentials:/app/credentials:ro
       - ./downloads:/app/downloads
+      - ./src:/app/src
+    environment:
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
