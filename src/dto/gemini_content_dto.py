@@ -10,7 +10,6 @@ class GeminiContentDto:
     knife product, returned in bilingual format (Ukrainian / English).
     """
 
-    product_code: str = ""
     title_ua: str = ""
     title_en: str = ""
     description_ua: str = ""
@@ -19,6 +18,7 @@ class GeminiContentDto:
     meta_keywords_en: str = ""
     meta_description_ua: str = ""
     meta_description_en: str = ""
+    engraving_style: str = ""
     # etsy_title: str = ""
     # etsy_description: str = ""
     # etsy_tags: str = ""

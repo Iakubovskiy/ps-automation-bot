@@ -46,9 +46,6 @@ class ProductManager:
             photo_paths=photos,
         )
 
-        logger.info("AI content generated for: %s", input_data.blade_name)
-        logger.info("AI content generated for: %s", ai_content.engraving_description)
-
         publish_data = PublishProductData(
             input_data=input_data,
             ai_content=ai_content,

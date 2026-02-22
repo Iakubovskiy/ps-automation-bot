@@ -24,19 +24,40 @@ You will receive:
 Generate the following fields in **both Ukrainian and English**
 (use the format "UA: … / EN: …" for each field):
 
-- product_code   — a short unique product code (e.g. "PS-D2-001")
-- title           — an appealing product title
-- description     — a rich marketing description (2-3 paragraphs)
-- meta_keywords   — comma-separated SEO keywords
-- meta_description— a single-sentence SEO meta description (≤160 chars)
-- etsy_title      — an Etsy-optimised listing title (≤140 chars)
-- etsy_description— a detailed Etsy listing description
-- etsy_tags       — up to 13 comma-separated Etsy tags
-- engraving_description — carefully examine the product photos and describe
-  the engraving style visible on the blade: what patterns, motifs, or images
-  are engraved, the technique used (e.g. acid etching, hand engraving,
-  laser engraving), and the overall artistic style. If no engraving is
-  visible, state that the blade has no engraving.
+- title_ua           — use product name from specs, colors, engraving style/pictures. 
+You should also use one of style you consider appropriate [tactical, survival, fighting, combat, bushcraft, edc] but only one, and go with this concept further. 
+Example (Ніж для виживання «Тигролов» | «Stalker» Гравіювання Череп у протигазі)
+- title_en           — translation to English title_ua 
+- description_ua     — it should consist of 3 blocks. The first one is short description, you should mention knife name that is provided, 
+describe it's design and mention custom engraving at the end. 
+Example (Ніж для виживання «Тигролов» у версії «Stalker» створений для екстремальних умов. Клинок зі сталі Х12МФ має захисне покриття травлення (Stonewash). Чорне руків'я з мікарти з 3D обробкою гарантує надійний хват. Дизайн просякнутий духом Зони: на клинку вигравіювано символ Biohazard та череп у протигазі, а на піхвах — напис Hard to Kill. Комплект оснащений зручним вільним підвісом та яскравим червоним темляком з намистиною. Ми також пропонуємо нанести індивідуальне гравіювання вашого позивного або гасла замість базового малюнка.)
+The second block is set components, thus based on what is in the specs (it's high priority) and what is in the photos attached you should write this block.
+Example (
+Комплектація
+- Ніж для виживання «Тигролов»: покриття травлення руків'я з мікарти колір Чорний
+- Гравіювання на клинку: символ Череп у протигазі
+- Піхви з ABS пластику: колір Чорний
+- Гравіювання на піхвах: напис
+- Кріплення: Вільний підвіс
+- Темляк
+)
+And the block 3 is bigger SEO oriented description, thus based on the chosen topic in title you should find and add keyword.  It should have 2-3 paragraphs with 2-3 sentences in each. Don't separate these paragraphs with enter
+Example
+(«Stalker» — виживає підготовлений.
+Модель «Тигролов» — це ідеальний супутник для довгих рейдів. Хижа геометрія клинка з легким вигином (recurve) забезпечує агресивний різ та чудові січні властивості. Ніж виготовлений з інструментальної сталі Х12МФ, яка довго тримає заточку навіть при роботі з твердими матеріалами. Покриття Stonewash додає металу брутальності та маскує подряпини.
+Естетика комплекту побудована навколо теми техногенної катастрофи та виживання. Чорне руків'я з мікарти не боїться вологи та бруду. Гравіювання Biohazard та Череп у респіраторі попереджають про небезпеку, а напис «Hard to Kill» («Важко вбити») на піхвах підкреслює живучість власника.
+Для максимального комфорту при носінні ніж комплектується системою вільний підвіс. Це дозволяє ножу вільно рухатися разом з тілом, не заважаючи сидіти в транспорті або долати перешкоди. Яскравий акцент — плетений темляк із бронзовою намистиною, що допомагає швидко вийняти ніж.
+)
+At the result take all 3 blocks and make one product description. IMPORTANT you mustn't highlight these blocks, just make enters after them   
+- description_en     — translate description_ua to English
+- meta_keywords_ua   — comma-separated SEO keywords, approximately 10 words in ukrainian
+- meta_keywords_en   — comma-separated SEO keywords, approximately 10 words in English
+- meta_description_ua — a SEO meta description (≤160 chars) in ukrainian and using emoji. Example (☢️ Ніж для виживання «Тигролов» Stalker. 💀 Вільний підвіс, чорна мікарта. Гравіювання Biohazard та Череп. Напис Hard to Kill. Темляк. Індивідуальне гравіювання.)
+- meta_description_en — a SEO meta description (≤160 chars) in English and using emoji Example (☢️ Survival Knife "Tygrolov" Stalker. 💀 Free suspension, black Micarta. Biohazard and Skull engraving. Hard to Kill inscription. Lanyard. Custom engraving.)
+- engraving_style – choose one style from the list [Скандинавські символи / руни, Аніме, 
+Емблеми батальйонів, Патріотичні, Герби / історичні символи, Черепи / темна естетика, Із кінофільмів,
+Ігри, Авторські дизайни, Індивідуальні написи] 
+You are allowed to choose more then 1 but not more then 3 style 
 
 Return your answer as a JSON object with exactly these keys.
 """

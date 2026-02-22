@@ -79,7 +79,7 @@ class HoroshopIntegration:
         ai = data.ai_content
         input_data = data.input_data
 
-        await admin_frame.locator('input[name="modifications[0][article]"]').fill(ai.product_code)
+        await admin_frame.locator('input[name="modifications[0][article]"]').fill(input_data.product_code)
         await admin_frame.locator('input[name="modifications[0][i18n][3][mod_title]"]').fill(ai.title_ua)
         await admin_frame.locator('input[name="modifications[0][i18n][4][mod_title]"]').fill(ai.title_en)
         await admin_frame.locator('input[name="modifications[0][price]"]').fill(str(input_data.price))

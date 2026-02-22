@@ -9,12 +9,13 @@ class InputProductData:
     Combines data collected via Telegram bot and looked up from Google Sheets.
     """
 
+    product_code: str
     blade_name: str
     total_length: int
     blade_length: int
     blade_width: int
     blade_weight: int
-    blade_thickness: int
+    blade_thickness: float
     hardness: int
     sharpening_angle: int
     configuration_type: str | None
