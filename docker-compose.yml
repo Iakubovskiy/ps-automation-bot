@@ -5,6 +5,7 @@ services:
     restart: always
     env_file:
       - .env
+      - .env.local
     volumes:
       - ./media:/app/media
       - ./service_account.json:/app/service_account.json

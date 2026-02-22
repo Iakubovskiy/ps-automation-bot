@@ -14,10 +14,11 @@ ENV PATH="$VIRTUAL_ENV/bin:$PATH"
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
+RUN playwright install chromium
+RUN playwright install-deps chromium
+
 COPY . .
 
-# Створюємо папку для медіа
 RUN mkdir -p media
 
-# Запуск
 CMD ["python", "-m", "src.bot"]
