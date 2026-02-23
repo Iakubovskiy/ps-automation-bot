@@ -8,7 +8,7 @@ from aiogram.fsm.context import FSMContext
 
 from src.states import CollectorState
 from src.enums import SheathColor, MountType, Status
-from src.services.google_sheets import gs_service
+from src.repositories.google_sheets import gs_service
 from src.services.file_manager import generate_item_uuid, save_file_path
 from src.keyboards.builders import (
     get_models_keyboard, get_enum_keyboard, get_yes_no_keyboard,
@@ -17,9 +17,7 @@ from src.keyboards.builders import (
 
 router = Router()
 
-# Lock per user to prevent race conditions when multiple photos arrive simultaneously
 _photo_locks: dict[int, asyncio.Lock] = defaultdict(asyncio.Lock)
-# Debounce tasks — wait for all photos in a batch before showing the confirmation
 _photo_debounce_tasks: dict[int, asyncio.Task] = {}
 
 @router.message(CommandStart())

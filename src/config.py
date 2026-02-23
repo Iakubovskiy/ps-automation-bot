@@ -9,8 +9,8 @@ class Settings(BaseSettings):
     """Bot settings and credentials."""
     bot_token: str
     gemini_api_key: str
-    spreadsheet_id: str = ""
-    google_service_account_file: str = "service_account.json"
+    spreadsheet_id: str = os.getenv("SPREADSHEET_ID")
+    google_service_account_file: str = "credentials/sheets-access.json"
 
     horoshop_store_url: str = "https://prostastal.com/edit/products/all"
     horoshop_email: str = os.getenv("HOROSHOP_EMAIL")

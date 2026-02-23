@@ -20,5 +20,6 @@ RUN playwright install-deps chromium
 COPY . .
 
 RUN mkdir -p media
+RUN mkdir -p credentials
 
 CMD ["python", "-m", "src.bot"]

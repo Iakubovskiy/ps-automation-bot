@@ -12,7 +12,6 @@ try:
     from src.config import settings
     from src.handlers.collector import router as collector_router
 except ModuleNotFoundError:
-    # Allow running as a script from the src/ directory.
     project_root = Path(__file__).resolve().parents[1]
     sys.path.append(str(project_root))
     from src.config import settings

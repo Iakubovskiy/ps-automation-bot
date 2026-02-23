@@ -8,9 +8,7 @@ services:
       - .env.local
     volumes:
       - ./media:/app/media
-      - ./service_account.json:/app/service_account.json
-      - ./credentials:/app/credentials:ro
-      - ./downloads:/app/downloads
+      - ./credentials:/app/credentials
       - ./src:/app/src
     environment:
       - GEMINI_API_KEY=${GEMINI_API_KEY}

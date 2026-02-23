@@ -3,7 +3,6 @@ import os
 import uuid
 from pathlib import Path
 
-# Шлях до папки медіа (у Docker це буде /app/media)
 MEDIA_BASE_PATH = Path("media")
 
 def generate_item_uuid() -> str:
