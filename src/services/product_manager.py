@@ -34,12 +34,13 @@ class ProductManager:
         4. Hand off to the publish service.
 
         Args:
-            input_data: Collected product data including photo URLs.
+            input_data: Collected product data including photo/video paths.
         """
         logger.info("Processing product: %s", input_data.blade_name)
 
         specs = asdict(input_data)
         photos = specs.pop("photos", [])
+        specs.pop("video_path", None)
 
         ai_content = await self.ai_service.generate_content(
             specs=specs,

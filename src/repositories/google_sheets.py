@@ -92,4 +92,94 @@ class GoogleSheetsService:
             logger.info("Falling back to MOCK models to prevent bot crash.")
             return list(self.MOCK_MODELS)
 
+    # ── Steel options ────────────────────────────────────────────────
+
+    MOCK_STEELS: list[str] = ["Х12МФ", "D2", "95Х18", "Дамаск", "440С"]
+
+    async def get_steel_options(self) -> list[str]:
+        """Fetch available steel types from the 'Steels' worksheet."""
+        if not self.available:
+            logger.warning("Sheets unavailable — returning MOCK steels.")
+            return list(self.MOCK_STEELS)
+
+        try:
+            client = await self.client_manager.authorize()
+            spreadsheet = await client.open_by_key(settings.spreadsheet_id)
+            worksheet = await spreadsheet.worksheet("Steels")
+            values = await worksheet.col_values(1)
+            return values[1:]
+        except Exception as e:
+            logger.error("Failed to fetch steels: %s", e)
+            return list(self.MOCK_STEELS)
+
+    # ── Handle-material options ──────────────────────────────────────
+
+    MOCK_HANDLES: list[str] = ["Мікарта", "G10", "Паракорд", "Дерево", "Кістка"]
+
+    async def get_handle_options(self) -> list[str]:
+        """Fetch available handle materials from the 'Handles' worksheet."""
+        if not self.available:
+            logger.warning("Sheets unavailable — returning MOCK handles.")
+            return list(self.MOCK_HANDLES)
+
+        try:
+            client = await self.client_manager.authorize()
+            spreadsheet = await client.open_by_key(settings.spreadsheet_id)
+            worksheet = await spreadsheet.worksheet("Handles")
+            values = await worksheet.col_values(1)
+            return values[1:]
+        except Exception as e:
+            logger.error("Failed to fetch handles: %s", e)
+            return list(self.MOCK_HANDLES)
+
+    # ── Blade specs lookup ───────────────────────────────────────────
+
+    MOCK_BLADE_SPECS: dict = {
+        "total_length": 280,
+        "blade_length": 150,
+        "blade_width": 35,
+        "blade_weight": 180,
+        "blade_thickness": 4.5,
+        "hardness": 58,
+        "sharpening_angle": 40,
+        "configuration_type": None,
+        "blade_type": "Ніж мисливський",
+    }
+
+    async def get_blade_specs(self, model_name: str) -> dict:
+        """Look up blade specifications by model name in the worksheet."""
+        if not self.available:
+            logger.warning("Sheets unavailable — returning MOCK blade specs.")
+            return dict(self.MOCK_BLADE_SPECS)
+
+        try:
+            client = await self.client_manager.authorize()
+            spreadsheet = await client.open_by_key(settings.spreadsheet_id)
+
+            worksheet = await spreadsheet.worksheet("Blades")
+            all_rows = await worksheet.get_all_records()
+
+            for row in all_rows:
+                if row.get("Назва") == model_name:
+                    raw_thickness = str(row.get("Товщина", "0")).replace(",", ".")
+
+                    return {
+                        "total_length": row.get("Загальна довжина", 0),
+                        "blade_length": row.get("Довжина клинка", 0),
+                        "blade_width": row.get("Ширина кл", 0),
+                        "blade_weight": row.get("Вага", 0),
+                        "blade_thickness": float(raw_thickness),
+                        "hardness": row.get("Твердість", 0),
+                        "sharpening_angle": row.get("Кут заточки", 0),
+                        "blade_type": row.get("Тип клинка", ""),
+                    }
+
+            logger.warning("Model '%s' not found in sheet.", model_name)
+            return dict(self.MOCK_BLADE_SPECS)
+
+        except Exception as e:
+            logger.error("Failed to fetch blade specs: %s", e)
+            return dict(self.MOCK_BLADE_SPECS)
+
+
 gs_service = GoogleSheetsService()

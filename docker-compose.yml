@@ -1,13 +1,30 @@
 services:
+  telegram-bot-api:
+    image: aiogram/telegram-bot-api:latest
+    container_name: telegram_api_server
+    restart: always
+    environment:
+      - TELEGRAM_API_ID=${TELEGRAM_API_ID}
+      - TELEGRAM_API_HASH=${TELEGRAM_API_HASH}
+      - TELEGRAM_LOCAL=1 # Tells the server to save files locally
+    volumes:
+      # Share the exact same media folder with the bot
+      - ./media:/var/lib/telegram-bot-api
+    ports:
+      - "8081:8081"
+
   bot:
     build: .
     container_name: prostastal_collector
     restart: always
+    depends_on:
+      - telegram-bot-api
     env_file:
       - .env
       - .env.local
     volumes:
       - ./media:/app/media
+      - ./media:/var/lib/telegram-bot-api
       - ./credentials:/app/credentials
       - ./src:/app/src
     environment:

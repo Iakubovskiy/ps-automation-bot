@@ -13,6 +13,7 @@ logging.basicConfig(level=logging.INFO)
 async def main():
     data = PublishProductData(
         input_data=InputProductData(
+            product_code="test-yarchuk-001",
             blade_name="Ярчук",
             total_length=280,
             blade_length=150,
@@ -29,13 +30,14 @@ async def main():
             has_lanyard=False,
             has_flint=True,
             engraving_count=2,
-            handle_type="Мікарта",
+            handle_material="Мікарта",
             steel="Х12МФ",
             price=1200.0,
             photos=['/app/media/puluj.jpg', '/app/media/puluj-copy.jpg'],
+            video_path="",
+            video_url="",
         ),
         ai_content=GeminiContentDto(
-            product_code="PS-D2-001",
             title_ua="Ніж Козак",
             title_en="Kozak Knife",
             description_ua="Красивий ніж ручної роботи зі сталі D2.",

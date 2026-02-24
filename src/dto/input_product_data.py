@@ -26,7 +26,9 @@ class InputProductData:
     has_lanyard: bool = False
     has_flint: bool = False
     engraving_count: int = 0
-    handle_type: str | None = None
+    handle_material: str | None = None
     steel: str = ""
     price: float = 0.0
     photos: list[str] = field(default_factory=list)
+    video_path: str = ""
+    video_url: str = ""

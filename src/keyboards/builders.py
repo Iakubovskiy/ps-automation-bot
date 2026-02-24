@@ -2,7 +2,6 @@
 from aiogram import types
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 from aiogram.types import InlineKeyboardMarkup
-from src.enums import SheathColor, MountType
 
 def get_enum_keyboard(enum_class) -> InlineKeyboardMarkup:
     """Generic function to create a keyboard from an Enum."""
@@ -12,11 +11,16 @@ def get_enum_keyboard(enum_class) -> InlineKeyboardMarkup:
     builder.adjust(2)
     return builder.as_markup()
 
-def get_models_keyboard(models: list[str]) -> InlineKeyboardMarkup:
-    """Create a keyboard with knife model names."""
+def get_models_keyboard(models: list[str], prefix: str = "model_") -> InlineKeyboardMarkup:
+    """Create a keyboard with a list of options.
+
+    Args:
+        models: Display labels for the buttons.
+        prefix: Callback-data prefix (e.g. ``model_``, ``steel_``, ``handle_``).
+    """
     builder = InlineKeyboardBuilder()
     for model in models:
-        builder.button(text=model, callback_data=f"model_{model}")
+        builder.button(text=model, callback_data=f"{prefix}{model}")
     builder.adjust(1)
     return builder.as_markup()
 

@@ -7,6 +7,8 @@ from pathlib import Path
 from aiogram import Bot, Dispatcher
 from aiogram.client.default import DefaultBotProperties
 from aiogram.enums import ParseMode
+from aiogram.client.session.aiohttp import AiohttpSession
+from aiogram.client.telegram import TelegramAPIServer
 
 try:
     from src.config import settings
@@ -19,6 +21,10 @@ except ModuleNotFoundError:
 
 async def main() -> None:
     """Initialize and start the bot."""
+    session = AiohttpSession(
+        api=TelegramAPIServer.from_base("http://telegram-bot-api:8081", is_local=True),
+    )
+
     logging.basicConfig(
         level=logging.INFO,
         format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
@@ -27,7 +33,8 @@ async def main() -> None:
 
     bot = Bot(
         token=settings.bot_token,
-        default=DefaultBotProperties(parse_mode=ParseMode.HTML)
+        default=DefaultBotProperties(parse_mode=ParseMode.HTML),
+        session=session,
     )
     dp = Dispatcher()
     dp.include_router(collector_router)

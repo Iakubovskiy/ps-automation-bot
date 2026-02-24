@@ -3,21 +3,17 @@ from enum import StrEnum
 
 class SheathColor(StrEnum):
     """Available colors for sheaths."""
-    BLACK = "Чорний"
-    COLOR = "Кольоровий"
-    CAMO = "Камуфляж"
-    SKELETON = "Скелетник"
+    BLACK = "Чорні"
+    COLOR = "Кольорові"
+    CAMO = "Комуфляж"
+    SKELETON = "Піхви скелетник"
 
 class MountType(StrEnum):
     """Types of knife mounts."""
-    MOLLE_LOK = "MolleLok"
-    TEK_LOK = "TekLok"
+    NONE = "Без кріплення"
+    MOLLE_LOK = "Моллі-Лок"
+    TEK_LOK = "Тек-Лок"
     FREE_SUSPENSION = "Вільний підвіс"
-    CLIP = "Кліпса"
-    THIGH_MOUNT = "Кріплення на стегно"
-    MOLLY_PLATFORM = "Платформа Моллі"
-
-class Status(StrEnum):
-    """Item processing status."""
-    PENDING = "Pending"
-    PROCESSED = "Processed"
+    CLIP = "U-кліпса"
+    THIGH_MOUNT = "Стегно Тек-лок"
+    MOLLY_PLATFORM = " Стегно Моллі-Лок"

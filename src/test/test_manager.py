@@ -28,10 +28,12 @@ async def main():
         has_lanyard=True,
         has_flint=False,
         engraving_count=3,
-        handle_type="Паракорд",
+        handle_material="Паракорд",
         steel="Х12МФ",
         price=3500.0,
         photos=["/app/media/puluj.jpg"],
+        video_path="",
+        video_url="",
     )
 
     manager = ProductManager(ai_service=GeminiService())

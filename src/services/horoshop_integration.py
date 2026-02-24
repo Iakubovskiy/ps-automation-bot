@@ -112,8 +112,8 @@ class HoroshopIntegration:
         #---- Checkbox ---
         steel_label = admin_frame.locator('label').filter(has_text=input_data.steel)
         await steel_label.locator('input[type="checkbox"]').check()
-        if input_data.handle_type is not None:
-            handle_label = admin_frame.locator('label').filter(has_text=input_data.handle_type)
+        if input_data.handle_material is not None:
+            handle_label = admin_frame.locator('label').filter(has_text=input_data.handle_material)
             await handle_label.locator('input[type="checkbox"]').check()
         for mount in input_data.attachments:
             await admin_frame.get_by_role("checkbox", name=mount, exact=True).check()
@@ -229,3 +229,5 @@ class HoroshopIntegration:
         self._page = None
         self._browser = None
         self._playwright = None
+
+    #TODO: Implement video url adding to photo

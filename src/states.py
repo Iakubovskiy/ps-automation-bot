@@ -15,6 +15,8 @@ class CollectorState(StatesGroup):
     sheath_engravings = State()
     accessories = State()
     mount_type = State()
+    steel = State()
+    handle_material = State()
     media_photos = State()
     media_video = State()
     youtube_link = State()
