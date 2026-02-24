@@ -35,7 +35,7 @@ async def main():
             price=1200.0,
             photos=['/app/media/puluj.jpg', '/app/media/puluj-copy.jpg'],
             video_path="",
-            video_url="",
+            video_url="https://youtube.com/shorts/xgiODW9XxPw?si=KXBCQseOhGWkFinH",
         ),
         ai_content=GeminiContentDto(
             title_ua="Ніж Козак",

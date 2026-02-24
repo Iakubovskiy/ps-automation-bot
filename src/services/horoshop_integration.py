@@ -1,6 +1,7 @@
 """Хорошоп platform integration using Playwright."""
 import logging
-from unittest import case
+import re
+import aiohttp
 
 from playwright.async_api import async_playwright, Browser, Page
 
@@ -43,6 +44,7 @@ class HoroshopIntegration:
         await self._fill_seo_fields(page, data)
         await self._upload_photos(page, data)
         await self._save(page)
+        await self._add_video(page, data)
 
         logger.info("Product published on Хорошоп: %s", data.ai_content.title_ua)
 
@@ -55,7 +57,7 @@ class HoroshopIntegration:
         await page.fill('input[type="text"]', settings.horoshop_email)
         await page.fill('input[type="password"]', settings.horoshop_password)
         await page.click('button[type="submit"]')
-        await page.wait_for_timeout(500)
+        await page.wait_for_timeout(5000)
         await page.wait_for_load_state("networkidle")
 
         logger.info("Logged into Хорошоп")
@@ -201,14 +203,81 @@ class HoroshopIntegration:
         await page.wait_for_timeout(500)
         await add_button.click()
         await page.wait_for_timeout(500)
-        await page.screenshot(path="/app/media/debug_screenshot_categories_1.png", full_page=True)
 
         await category_select.select_option(value="1094")
         await add_button.click()
 
-        await page.screenshot(path="/app/media/debug_screenshot_categories.png", full_page=True)
-
         logger.info("Додаткові розділи успішно додано")
+
+    async def _generate_youtube_iframe(self, url: str) -> str:
+        """
+        Extracts the video ID from a YouTube URL, fetches the video title,
+        and returns a formatted HTML iframe block.
+        """
+        match = re.search(r"(?:shorts/|v=|youtu\.be/)([0-9A-Za-z_-]{11})", url)
+        if not match:
+            logger.error(f"Could not extract YouTube ID from URL: {url}")
+            return ""
+
+        video_id = match.group(1)
+
+        oembed_url = f"https://www.youtube.com/oembed?url=https://www.youtube.com/watch?v={video_id}&format=json"
+        title = "YouTube Video"
+
+        try:
+            async with aiohttp.ClientSession() as session:
+                async with session.get(oembed_url, timeout=5) as response:
+                    if response.status == 200:
+                        data = await response.json()
+                        title = data.get("title", title)
+        except Exception as e:
+            logger.error(f"Failed to fetch YouTube title for {video_id}: {e}")
+
+        safe_title = title.replace('"', '&quot;')
+
+        iframe_html = (
+            f'<iframe width="315" height="560" '
+            f'src="https://www.youtube.com/embed/{video_id}" '
+            f'title="{safe_title}" '
+            f'frameborder="0" '
+            f'allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" '
+            f'referrerpolicy="strict-origin-when-cross-origin" '
+            f'allowfullscreen></iframe>'
+        )
+
+        return iframe_html
+
+    async def _add_video(self, page: Page, data: PublishProductData) -> None:
+        """Generates the iframe and injects it into the Horoshop image block."""
+        video_url = data.input_data.video_url
+
+        if not video_url:
+            logger.info("No video URL provided. Skipping video insertion.")
+            return
+
+        logger.info(f"Processing YouTube video: {video_url}")
+        video_html = await self._generate_youtube_iframe(video_url)
+
+        if not video_html:
+            logger.error("Failed to generate iframe HTML. Skipping video.")
+            return
+
+        admin_frame = page.frame_locator('iframe[src*="/adminLegacy/data.php"]')
+        target_photo_block = admin_frame.locator('li.modifications_imagepreview').last
+
+        edit_button = target_photo_block.locator('a[class = "edit make-edit"]')
+        await target_photo_block.hover()
+        await page.wait_for_timeout(300)
+        await edit_button.click(force=True)
+        await page.wait_for_timeout(300)
+
+        video_textarea = target_photo_block.locator('textarea[placeholder="код відео"]')
+        await video_textarea.fill(video_html)
+        await self._save(page)
+        await page.wait_for_timeout(5000)
+
+        logger.info("✅ YouTube video iframe successfully injected.")
+
 
     async def _save(self, page: Page) -> None:
         """Click the save/publish button."""
