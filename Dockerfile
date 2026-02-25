@@ -22,4 +22,8 @@ COPY . .
 RUN mkdir -p media
 RUN mkdir -p credentials
 
+RUN useradd -u 10014 botuser
+RUN chown -R botuser:botuser /app
+USER 10014
+
 CMD ["python", "-m", "src.bot"]
