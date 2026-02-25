@@ -26,4 +26,4 @@ RUN useradd -u 10014 botuser
 RUN chown -R botuser:botuser /app
 USER 10014
 
-CMD ["python", "-m", "src.bot"]
+CMD sh -c "echo \"$GOOGLE_CREDS_JSON\" > credentials/sheets-access.json && python -m src.bot"
