@@ -21,7 +21,6 @@ services:
       - telegram-bot-api
     env_file:
       - .env
-      - .env.local
     volumes:
       - ./media:/app/media
       - ./media:/var/lib/telegram-bot-api
