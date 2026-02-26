@@ -83,6 +83,7 @@ class GeminiService(AiService):
         ]
 
         if photo_paths:
+            photo_paths = photo_paths[:2]
             for path in photo_paths:
                 uploaded = self.client.files.upload(file=path)
                 parts.append(uploaded)
