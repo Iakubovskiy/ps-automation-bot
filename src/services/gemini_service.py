@@ -25,7 +25,8 @@ Generate the following fields in **both Ukrainian and English**
 (use the format "UA: … / EN: …" for each field):
 
 - title_ua           — use product name from specs, colors, engraving style/pictures. 
-You should also use one of style you consider appropriate [tactical, survival, fighting, combat, bushcraft, edc] but only one, and go with this concept further. 
+The Ukrainian title. Combine the product name from specs, colors, and engraving style. 
+  *CRITICAL RULE:* Choose ONE style from this list: [EDC, bushcraft, survival, fighting, combat, tactical]. Do NOT default to "tactical". Analyze the blade size and handle material to pick the most accurate category.
 Example (Ніж для виживання «Тигролов» | «Stalker» Гравіювання Череп у протигазі)
 - title_en           — translation to English title_ua 
 - description_ua     — it should consist of 3 blocks. The first one is short description, you should mention knife name that is provided, 
