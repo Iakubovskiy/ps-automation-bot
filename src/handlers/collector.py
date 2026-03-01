@@ -86,10 +86,40 @@ async def process_price(message: types.Message, state: FSMContext) -> None:
 
 @router.callback_query(CollectorState.sheath_color)
 async def process_color(callback: types.CallbackQuery, state: FSMContext) -> None:
-    """Save color and ask about Musat."""
+    """Save color and ask for blade engraving count."""
     await state.update_data(sheath_color=callback.data)
     await callback.answer()
     await callback.message.answer(
+        "Скільки гравіювань на клинку? (введіть число, 0 — якщо немає):"
+    )
+    await state.set_state(CollectorState.blade_engravings)
+
+
+# ── Engravings ───────────────────────────────────────────────────────
+
+@router.message(CollectorState.blade_engravings)
+async def process_blade_engravings(message: types.Message, state: FSMContext) -> None:
+    """Save blade engraving count and ask for sheath engravings."""
+    if not message.text.isdigit():
+        await message.answer("Будь ласка, введіть числове значення.")
+        return
+
+    await state.update_data(blade_engravings=int(message.text))
+    await message.answer(
+        "Скільки гравіювань на піхвах? (введіть число, 0 — якщо немає):"
+    )
+    await state.set_state(CollectorState.sheath_engravings)
+
+
+@router.message(CollectorState.sheath_engravings)
+async def process_sheath_engravings(message: types.Message, state: FSMContext) -> None:
+    """Save sheath engraving count and ask about Musat."""
+    if not message.text.isdigit():
+        await message.answer("Будь ласка, введіть числове значення.")
+        return
+
+    await state.update_data(sheath_engravings=int(message.text))
+    await message.answer(
         "Чи є в комплекті мусат?",
         reply_markup=get_yes_no_keyboard()
     )

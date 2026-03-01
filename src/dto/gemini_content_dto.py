@@ -1,5 +1,5 @@
 """DTO for AI-generated product content returned by Gemini."""
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 
 @dataclass
@@ -18,7 +18,7 @@ class GeminiContentDto:
     meta_keywords_en: str = ""
     meta_description_ua: str = ""
     meta_description_en: str = ""
-    engraving_style: str = ""
+    engraving_style: list[str] = field(default_factory=list)
     # etsy_title: str = ""
     # etsy_description: str = ""
     # etsy_tags: str = ""
