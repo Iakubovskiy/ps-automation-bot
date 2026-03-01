@@ -2,6 +2,7 @@
 import logging
 import re
 import aiohttp
+import json
 
 from playwright.async_api import async_playwright, Browser, Page
 
@@ -104,6 +105,7 @@ class HoroshopIntegration:
         """Fill in the specs product fields."""
         admin_frame = page.frame_locator('iframe[src*="/adminLegacy/data.php"]')
         input_data = data.input_data
+        ai_data = data.ai_content
 
         await admin_frame.locator('select[name="names[tipNozha]"]').select_option(label=input_data.blade_type)
         await admin_frame.locator('select[name="names[nazvaNozha]"]').select_option(label=input_data.blade_name)
@@ -143,6 +145,11 @@ class HoroshopIntegration:
 
         for label_text in labels_to_check:
             await admin_frame.get_by_role("checkbox", name=label_text, exact=True).check()
+
+        for style in ai_data.engraving_style:
+            style_label = admin_frame.locator('label').filter(has_text=style)
+            await style_label.locator('input[type="checkbox"]').scroll_into_view_if_needed()
+            await style_label.locator('input[type="checkbox"]').check()
 
         # ---------------------------------------------------------------------------------------------------
         await admin_frame.locator('input[name="names[tverdystPoRokvelu]"]').fill(str(input_data.hardness))
@@ -278,7 +285,6 @@ class HoroshopIntegration:
 
         logger.info("✅ YouTube video iframe successfully injected.")
 
-
     async def _save(self, page: Page) -> None:
         """Click the save/publish button."""
         admin_frame = page.frame_locator('iframe[src*="/adminLegacy/data.php"]')
@@ -298,5 +304,3 @@ class HoroshopIntegration:
         self._page = None
         self._browser = None
         self._playwright = None
-
-    #TODO: Implement video url adding to photo

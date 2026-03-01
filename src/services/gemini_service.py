@@ -55,10 +55,7 @@ At the result take all 3 blocks and make one product description. IMPORTANT you 
 - meta_keywords_en   — comma-separated SEO keywords, approximately 10 words in English
 - meta_description_ua — a SEO meta description (≤160 chars) in ukrainian and using emoji. Example (☢️ Ніж для виживання «Тигролов» Stalker. 💀 Вільний підвіс, чорна мікарта. Гравіювання Biohazard та Череп. Напис Hard to Kill. Темляк. Індивідуальне гравіювання.)
 - meta_description_en — a SEO meta description (≤160 chars) in English and using emoji Example (☢️ Survival Knife "Tygrolov" Stalker. 💀 Free suspension, black Micarta. Biohazard and Skull engraving. Hard to Kill inscription. Lanyard. Custom engraving.)
-- engraving_style – choose one style from the list [Скандинавські символи / руни, Аніме, 
-Емблеми батальйонів, Патріотичні, Герби / історичні символи, Черепи / темна естетика, Із кінофільмів,
-Ігри, Авторські дизайни, Індивідуальні написи] 
-You are allowed to choose more then 1 but not more then 3 style 
+- "engraving_style": Array of Strings. Choose between 1 and 3 styles from this exact list depending on product photos: [Скандинавські символи / руни, Аніме, Емблеми батальйонів, Патріотичні, Герби / історичні символи, Черепи / темна естетика, Із кінофільмів, Ігри, Авторські дизайни, Індивідуальні написи]. Make an output format [style 1, style 2]
 
 Return your answer as a JSON object with exactly these keys.
 """

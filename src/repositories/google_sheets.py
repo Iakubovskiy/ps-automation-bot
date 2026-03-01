@@ -166,7 +166,7 @@ class GoogleSheetsService:
                     return {
                         "total_length": row.get("Загальна довжина", 0),
                         "blade_length": row.get("Довжина клинка", 0),
-                        "blade_width": row.get("Ширина кл", 0),
+                        "blade_width": row.get("Ширина клинка", 0),
                         "blade_weight": row.get("Вага", 0),
                         "blade_thickness": float(raw_thickness),
                         "hardness": row.get("Твердість", 0),
