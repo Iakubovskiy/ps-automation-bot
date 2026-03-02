@@ -1,4 +1,38 @@
 services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: pim_postgres
+    restart: always
+    environment:
+      POSTGRES_DB: pim_hub
+      POSTGRES_USER: pim
+      POSTGRES_PASSWORD: pim_secret
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
+  redis:
+    image: redis:7-alpine
+    container_name: pim_redis
+    restart: always
+    ports:
+      - "6379:6379"
+
+  minio:
+    image: minio/minio:latest
+    container_name: pim_minio
+    restart: always
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+    volumes:
+      - miniodata:/data
+    ports:
+      - "9000:9000"
+      - "9001:9001" # MinIO Console
+
   telegram-bot-api:
     image: aiogram/telegram-bot-api:latest
     container_name: telegram_api_server
@@ -6,26 +40,90 @@ services:
     environment:
       - TELEGRAM_API_ID=${TELEGRAM_API_ID}
       - TELEGRAM_API_HASH=${TELEGRAM_API_HASH}
-      - TELEGRAM_LOCAL=1 # Tells the server to save files locally
+      - TELEGRAM_LOCAL=1
     volumes:
-      # Share the exact same media folder with the bot
       - ./media:/var/lib/telegram-bot-api
     ports:
       - "8081:8081"
 
-  bot:
-    build: .
-    container_name: prostastal_collector
+  nginx:
+    image: nginx:alpine
+    container_name: pim_nginx
     restart: always
+    volumes:
+      - ./docker/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    ports:
+      - "80:80"
     depends_on:
-      - telegram-bot-api
+      - app
+
+  # ── Application ─────────────────────────────────────────────────────
+  app:
+    build: .
+    container_name: pim_app
+    restart: always
+    command: [ "python", "manage.py", "runserver", "0.0.0.0:8000" ]
+    depends_on:
+      - postgres
+      - redis
+      - minio
     env_file:
       - .env
       - .env.local
+    environment:
+      - DJANGO_SETTINGS_MODULE=framework.settings
+      - POSTGRES_HOST=postgres
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - MINIO_ENDPOINT=minio:9000
+    volumes:
+      - ./media:/app/media
+      - ./credentials:/app/credentials
+    ports:
+      - "8000:8000"
+
+  bot:
+    build: .
+    container_name: pim_bot
+    restart: always
+    command: [ "python", "src/bot.py" ]
+    depends_on:
+      - telegram-bot-api
+      - postgres
+      - redis
+    env_file:
+      - .env
+      - .env.local
+    environment:
+      - DJANGO_SETTINGS_MODULE=framework.settings
+      - POSTGRES_HOST=postgres
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - MINIO_ENDPOINT=minio:9000
     volumes:
       - ./media:/app/media
       - ./media:/var/lib/telegram-bot-api
       - ./credentials:/app/credentials
-      - ./src:/app/src
+
+  worker:
+    build: .
+    container_name: pim_worker
+    restart: always
+    command: [ "celery", "-A", "framework.celery", "worker", "--loglevel=info" ]
+    depends_on:
+      - postgres
+      - redis
+      - minio
+    env_file:
+      - .env
+      - .env.local
     environment:
-      - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - DJANGO_SETTINGS_MODULE=framework.settings
+      - POSTGRES_HOST=postgres
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - MINIO_ENDPOINT=minio:9000
+    volumes:
+      - ./media:/app/media
+      - ./credentials:/app/credentials
+
+volumes:
+  pgdata:
+  miniodata:

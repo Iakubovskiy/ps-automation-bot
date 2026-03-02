@@ -1,49 +1,44 @@
-"""Main entry point for the Telegram bot."""
+"""Bot entry point — initializes aiogram and registers dynamic collector."""
 import asyncio
 import logging
+import os
 import sys
 from pathlib import Path
 
+# Ensure src/ is on Python path for Django + module imports
+src_dir = str(Path(__file__).resolve().parent)
+if src_dir not in sys.path:
+    sys.path.insert(0, src_dir)
+
+import django
+
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "framework.settings")
+django.setup()
+
 from aiogram import Bot, Dispatcher
 from aiogram.client.default import DefaultBotProperties
-from aiogram.enums import ParseMode
-from aiogram.client.session.aiohttp import AiohttpSession
-from aiogram.client.telegram import TelegramAPIServer
+from django.conf import settings
 
-try:
-    from src.config import settings
-    from src.handlers.collector import router as collector_router
-except ModuleNotFoundError:
-    project_root = Path(__file__).resolve().parents[1]
-    sys.path.append(str(project_root))
-    from src.config import settings
-    from src.handlers.collector import router as collector_router
+from modules.interface.bot_interface.handlers.dynamic_collector import router as collector_router
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
 
 async def main() -> None:
-    """Initialize and start the bot."""
-    session = AiohttpSession(
-        api=TelegramAPIServer.from_base("http://telegram-bot-api:8081", is_local=True),
-    )
+    """Start the Telegram bot with the dynamic collector handler."""
+    bot_token = settings.BOT_TOKEN
+    if not bot_token:
+        logger.error("bot_token is not set in environment!")
+        return
 
-    logging.basicConfig(
-        level=logging.INFO,
-        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-        stream=sys.stdout
-    )
-
-    bot = Bot(
-        token=settings.bot_token,
-        default=DefaultBotProperties(parse_mode=ParseMode.HTML),
-        session=session,
-    )
+    bot = Bot(token=bot_token, default=DefaultBotProperties(parse_mode="HTML"))
     dp = Dispatcher()
     dp.include_router(collector_router)
 
-    logging.info("Starting bot...")
+    logger.info("Starting PIM bot…")
     await dp.start_polling(bot)
 
+
 if __name__ == "__main__":
-    try:
-        asyncio.run(main())
-    except KeyboardInterrupt:
-        pass
+    asyncio.run(main())
