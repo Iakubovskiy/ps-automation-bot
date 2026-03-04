@@ -6,6 +6,7 @@ Replaces the old hardcoded collector.py with a schema-driven FSM flow:
 For each attribute field in the schema:
   - source_type == STATIC_DB → query StaticReference by source_ref → inline keyboard
   - source_type == MANUAL → prompt text input, validate by data_type
+  - source_type == AI → skip (generated later by AI service)
   - multi_select == True → multi-select keyboard with toggle
 """
 import asyncio
@@ -15,6 +16,8 @@ from collections import defaultdict
 from aiogram import Router, F, types
 from aiogram.filters import CommandStart
 from aiogram.fsm.context import FSMContext
+
+from core.attribute_schema import SourceType, DataType, validate_attribute_schema
 
 from modules.interface.bot_interface.states import DynamicCollectorState
 from modules.interface.bot_interface.keyboards import (
@@ -76,12 +79,21 @@ async def process_category(callback: types.CallbackQuery, state: FSMContext) -> 
         await callback.answer("Категорію не знайдено!", show_alert=True)
         return
 
-    schema = category.attribute_schema or []
+    raw_schema = category.attribute_schema or []
 
+    # Validate and parse schema into typed objects
+    try:
+        parsed = validate_attribute_schema(raw_schema)
+    except Exception as exc:
+        logger.exception("Invalid attribute_schema for category %s", category_id)
+        await callback.answer(f"Помилка схеми: {exc}", show_alert=True)
+        return
+
+    # Store raw dicts for FSM serialization, but we validate upfront
     await state.update_data(
         category_id=category_id,
         category_name=category.name,
-        schema=schema,
+        schema=raw_schema,
         attr_index=0,
         collected={},
         multi_selected=[],
@@ -101,8 +113,22 @@ async def _ask_next_attribute(message: types.Message, state: FSMContext) -> None
     schema = data["schema"]
     index = data["attr_index"]
 
+    collected = data.get("collected", {})
+
+    # Skip AI fields and fields already auto-filled from a previous selection
+    while index < len(schema):
+        field = schema[index]
+        if field.get("source_type") == SourceType.AI:
+            index += 1
+            continue
+        if field["key"] in collected:
+            index += 1
+            continue
+        break
+
     if index >= len(schema):
-        # All attributes collected — move to photos
+        # All collectible attributes done — move to photos
+        await state.update_data(attr_index=index)
         await state.set_state(DynamicCollectorState.media_photos)
         await message.answer(
             "✅ Всі характеристики зібрано!\n\n"
@@ -111,14 +137,15 @@ async def _ask_next_attribute(message: types.Message, state: FSMContext) -> None
         )
         return
 
+    await state.update_data(attr_index=index)
     field = schema[index]
     label = field.get("label", field["key"])
-    source_type = field.get("source_type", "MANUAL")
+    source_type = field.get("source_type", SourceType.MANUAL)
     multi_select = field.get("multi_select", False)
 
     await state.set_state(DynamicCollectorState.attribute_step)
 
-    if source_type == "STATIC_DB":
+    if source_type == SourceType.STATIC_DB:
         # Query StaticReference for options
         source_ref = field.get("source_ref", "")
         org_id = data.get("organization_id", "")
@@ -144,11 +171,11 @@ async def _ask_next_attribute(message: types.Message, state: FSMContext) -> None
             )
     else:
         # MANUAL input
-        data_type = field.get("data_type", "str")
+        data_type = field.get("data_type", DataType.STR)
         hint = ""
-        if data_type == "int":
+        if data_type == DataType.INT:
             hint = " (ціле число)"
-        elif data_type == "float":
+        elif data_type == DataType.FLOAT:
             hint = " (число)"
         await message.answer(f"Введіть {label}{hint}:")
 
@@ -166,13 +193,29 @@ async def process_static_ref(callback: types.CallbackQuery, state: FSMContext) -
 
     collected = data.get("collected", {})
     collected[field["key"]] = selected_key
+
+    # Auto-fill: merge item's value JSON into collected data
+    auto_fill = field.get("auto_fill_from_value", False)
+    if auto_fill:
+        source_ref = field.get("source_ref", "")
+        org_id = data.get("organization_id", "")
+        item = StaticReferenceRepository.find_by_key(org_id, source_ref, selected_key)
+        if item and isinstance(item.value, dict):
+            collected.update(item.value)
+            filled_keys = list(item.value.keys())
+            logger.info("Auto-filled %d fields from %s: %s", len(filled_keys), selected_key, filled_keys)
+
     await state.update_data(
         collected=collected,
         attr_index=index + 1,
     )
 
     await callback.answer()
-    await callback.message.answer(f"✅ {field.get('label', field['key'])}: {selected_key}")
+    label_text = field.get('label', field['key'])
+    msg = f"✅ {label_text}: {selected_key}"
+    if auto_fill:
+        msg += "\n📋 Характеристики заповнено автоматично."
+    await callback.message.answer(msg)
     await _ask_next_attribute(callback.message, state)
 
 
@@ -245,13 +288,13 @@ async def process_manual_input(message: types.Message, state: FSMContext) -> Non
     field = schema[index]
 
     raw = message.text.strip()
-    data_type = field.get("data_type", "str")
+    data_type = field.get("data_type", DataType.STR)
 
     # Type validation
     try:
-        if data_type == "int":
+        if data_type == DataType.INT:
             value = int(raw)
-        elif data_type == "float":
+        elif data_type == DataType.FLOAT:
             value = float(raw.replace(",", "."))
         else:
             value = raw

@@ -31,7 +31,12 @@ from django.db import models
 class Category(models.Model):
     """A product category with an AI prompt and dynamic attribute schema."""
 
-    name = models.CharField(max_length=255, unique=True)
+    organization = models.ForeignKey(
+        "users.Organization",
+        on_delete=models.CASCADE,
+        related_name="categories",
+    )
+    name = models.CharField(max_length=255)
     system_prompt = models.TextField(
         blank=True,
         default="",
@@ -46,6 +51,7 @@ class Category(models.Model):
         db_table = "catalog_category"
         verbose_name = "Category"
         verbose_name_plural = "Categories"
+        unique_together = [("organization", "name")]
 
     def __str__(self) -> str:
         return self.name
