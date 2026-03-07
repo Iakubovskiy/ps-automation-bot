@@ -6,7 +6,6 @@ from dotenv import load_dotenv
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# Load environment files
 _env_local = BASE_DIR / ".env.local"
 if _env_local.exists():
     load_dotenv(_env_local)
@@ -93,6 +92,9 @@ MINIO_ACCESS_KEY = os.getenv("MINIO_ACCESS_KEY", "minioadmin")
 MINIO_SECRET_KEY = os.getenv("MINIO_SECRET_KEY", "minioadmin")
 MINIO_BUCKET_NAME = os.getenv("MINIO_BUCKET_NAME", "pim-media")
 MINIO_USE_SSL = os.getenv("MINIO_USE_SSL", "false").lower() in ("true", "1")
+MINIO_ENDPOINT_URL = os.getenv("MINIO_ENDPOINT_URL", "http://minio:9000")
+MINIO_ROOT_USER = os.getenv("MINIO_ROOT_USER", "minioadmin")
+MINIO_ROOT_PASSWORD = os.getenv("MINIO_ROOT_PASSWORD", "minioadmin")
 
 # ── Static & Media ───────────────────────────────────────────────────
 

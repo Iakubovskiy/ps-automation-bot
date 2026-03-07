@@ -1,4 +1,4 @@
-"""Bot entry point — initializes aiogram and registers dynamic collector."""
+"""Bot entry point — initializes aiogram and registers dynamic dynamic_collector."""
 import asyncio
 import logging
 import os
@@ -26,7 +26,7 @@ logger = logging.getLogger(__name__)
 
 
 async def main() -> None:
-    """Start the Telegram bot with the dynamic collector handler."""
+    """Start the Telegram bot with the dynamic dynamic_collector handler."""
     bot_token = settings.BOT_TOKEN
     if not bot_token:
         logger.error("bot_token is not set in environment!")

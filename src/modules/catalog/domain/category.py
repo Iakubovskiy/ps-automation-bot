@@ -58,23 +58,46 @@ class Category(models.Model):
 
     # ── Rich Model behaviour ─────────────────────────────────────────
 
+    def get_attribute_schema(self) -> list[dict]:
+        """Build attribute_schema from related CategoryAttribute records.
+
+        Falls back to the JSON field if no inline attributes exist.
+        """
+        attrs = list(self.attributes.all().order_by("order", "pk"))
+        if attrs:
+            return [a.to_schema_dict() for a in attrs]
+        return self.attribute_schema or []
+
+    async def aget_attribute_schema(self) -> list[dict]:
+        """Async version of get_attribute_schema with pre-fetched relations."""
+        attrs = [
+            a async for a in self.attributes.select_related("source_ref_group")
+            .all()
+            .order_by("order", "pk")
+        ]
+
+        if attrs:
+            return [a.to_schema_dict() for a in attrs]
+
+        return self.attribute_schema or []
+
     def get_static_db_fields(self) -> list[dict]:
-        """Return only attribute_schema fields that reference StaticReference."""
+        """Return only fields that reference StaticReference."""
         return [
-            field for field in self.attribute_schema
-            if field.get("source_type") == "STATIC_DB"
+            f for f in self.get_attribute_schema()
+            if f.get("source_type") == "STATIC_DB"
         ]
 
     def get_manual_fields(self) -> list[dict]:
-        """Return only attribute_schema fields requiring manual text input."""
+        """Return only fields requiring manual text input."""
         return [
-            field for field in self.attribute_schema
-            if field.get("source_type") == "MANUAL"
+            f for f in self.get_attribute_schema()
+            if f.get("source_type") == "MANUAL"
         ]
 
     def get_field_by_key(self, key: str) -> dict | None:
         """Look up a single schema field by its key."""
-        for field in self.attribute_schema:
+        for field in self.get_attribute_schema():
             if field.get("key") == key:
                 return field
         return None

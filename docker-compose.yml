@@ -31,7 +31,7 @@ services:
       - miniodata:/data
     ports:
       - "9000:9000"
-      - "9001:9001" # MinIO Console
+      - "9001:9001"
 
   telegram-bot-api:
     image: aiogram/telegram-bot-api:latest
@@ -76,6 +76,7 @@ services:
       - CELERY_BROKER_URL=redis://redis:6379/0
       - MINIO_ENDPOINT=minio:9000
     volumes:
+      - .:/app
       - ./media:/app/media
       - ./credentials:/app/credentials
     ports:
@@ -102,6 +103,7 @@ services:
       - ./media:/app/media
       - ./media:/var/lib/telegram-bot-api
       - ./credentials:/app/credentials
+      - .:/app
 
   worker:
     build: .

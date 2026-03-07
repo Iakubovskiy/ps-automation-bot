@@ -1,4 +1,4 @@
-"""FSM states for the dynamic product collector.
+"""FSM states for the dynamic product dynamic_collector.
 
 Replaces the old hardcoded CollectorState with dynamic attribute stepping.
 Current attribute index and schema are tracked in FSM data, not in state names.
@@ -20,6 +20,7 @@ class DynamicCollectorState(StatesGroup):
 
     category_select = State()
     attribute_step = State()
+    file_upload = State()
     media_photos = State()
     media_video = State()
     youtube_link = State()

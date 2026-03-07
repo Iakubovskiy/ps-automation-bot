@@ -40,6 +40,8 @@ class StaticReferenceGroup(models.Model):
     field_schema = models.JSONField(
         default=list,
         help_text="JSON array defining what fields each item in this group has",
+        null=True,
+        blank=True,
     )
 
     class Meta:

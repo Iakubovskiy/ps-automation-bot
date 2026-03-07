@@ -23,6 +23,10 @@ class DataType(str, Enum):
     STR = "str"
     INT = "int"
     FLOAT = "float"
+    BOOLEAN = "bool"
+    FILE = "file"
+    FILE_ARRAY = "file_array"
+    STR_ARRAY = "string_array"
 
 
 class AttributeFieldSchema(BaseModel):
@@ -50,6 +54,7 @@ class AttributeFieldSchema(BaseModel):
     source_ref: Optional[str] = None
     multi_select: bool = False
     auto_fill_from_value: bool = False
+    optional: bool = False
 
     @field_validator("source_ref")
     @classmethod

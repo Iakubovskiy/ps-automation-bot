@@ -74,6 +74,34 @@ def get_multi_select_ref_keyboard(
     return builder.as_markup()
 
 
+def get_boolean_keyboard() -> InlineKeyboardMarkup:
+    """Boolean field keyboard (Так/Ні)."""
+    builder = InlineKeyboardBuilder()
+    builder.button(text="✅ Так", callback_data="bool_yes")
+    builder.button(text="❌ Ні", callback_data="bool_no")
+    builder.adjust(2)
+    return builder.as_markup()
+
+
+def get_boolean_keyboard_with_skip() -> InlineKeyboardMarkup:
+    """Boolean field keyboard with skip option."""
+    builder = InlineKeyboardBuilder()
+    builder.button(text="✅ Так", callback_data="bool_yes")
+    builder.button(text="❌ Ні", callback_data="bool_no")
+    builder.adjust(2)
+    builder.row(types.InlineKeyboardButton(text="⏩ Пропустити", callback_data="skip_attr"))
+    return builder.as_markup()
+
+
+def get_finish_files_keyboard() -> InlineKeyboardMarkup:
+    """Button to finish file_array upload."""
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            [types.InlineKeyboardButton(text="Це всі файли ✅", callback_data="finish_files")]
+        ]
+    )
+
+
 def get_yes_no_keyboard() -> InlineKeyboardMarkup:
     """Simple Yes/No keyboard."""
     builder = InlineKeyboardBuilder()
@@ -108,3 +136,4 @@ def get_skip_keyboard(callback: str = "skip") -> InlineKeyboardMarkup:
             [types.InlineKeyboardButton(text="⏩ Пропустити", callback_data=callback)]
         ]
     )
+
