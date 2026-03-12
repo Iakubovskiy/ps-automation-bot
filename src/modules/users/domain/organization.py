@@ -46,3 +46,16 @@ class Organization(models.Model):
             )
         )
         return org
+
+    @property
+    def active_integrations(self) -> list[str]:
+        """Повертає список типів активних драйверів (наприклад, ['horoshop', 'etsy'])."""
+        # Локальний імпорт для уникнення циклічних залежностей між модулями users та distribution
+        from modules.distribution.domain.distribution_driver import DistributionDriver, DriverStatus
+
+        return list(
+            DistributionDriver.objects.filter(
+                organization_id=self.id,
+                status=DriverStatus.ACTIVE
+            ).values_list("driver_type", flat=True)
+        )

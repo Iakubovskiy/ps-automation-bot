@@ -1,3 +1,5 @@
+import uuid
+
 from aiogram import Router, F, types
 from aiogram.fsm.context import FSMContext
 from asgiref.sync import sync_to_async
@@ -37,7 +39,7 @@ async def process_file_upload(message: types.Message, state: FSMContext, bot) ->
         original_name = message.document.file_name or "file"
     elif message.photo:
         file_id = message.photo[-1].file_id
-        original_name = f"photo_{file_id[:8]}.jpg"
+        original_name = f"photo_{uuid.uuid4().hex[:8]}.jpg"
     else:
         return
 
@@ -56,13 +58,15 @@ async def process_file_upload(message: types.Message, state: FSMContext, bot) ->
     collected = data.get("collected", {})
 
     if data_type == DataType.FILE_ARRAY:
-        file_uploads = data.get("file_uploads", [])
-        file_uploads.append(s3_path)
-        await state.update_data(file_uploads=file_uploads)
+        unique_key = f"_file_{uuid.uuid4().hex[:12]}"
+        await state.update_data(**{unique_key: s3_path})
+
+        updated_data = await state.get_data()
+        count = sum(1 for k in updated_data if k.startswith("_file_"))
 
         await message.answer(
             f"📎 Файл «{original_name}» додано.\n"
-            f"Всього завантажено: {len(file_uploads)}",
+            f"Всього завантажено: {count}",
             reply_markup=message.reply_markup
         )
     else:
@@ -83,16 +87,17 @@ async def finish_files(callback: types.CallbackQuery, state: FSMContext) -> None
     index = data["attr_index"]
     field = schema[index]
 
-    files = data.get("file_uploads", [])
-    collected = data.get("collected", {})
+    # Gather all individually stored file paths
+    files = [v for k, v in sorted(data.items()) if k.startswith("_file_")]
 
+    collected = data.get("collected", {})
     collected[field["key"]] = files
 
-    await state.update_data(
-        collected=collected,
-        attr_index=index + 1,
-        file_uploads=[]
-    )
+    # Clean up individual file keys and advance to next attribute
+    clean_update = {k: None for k in data if k.startswith("_file_")}
+    clean_update["collected"] = collected
+    clean_update["attr_index"] = index + 1
+    await state.update_data(**clean_update)
 
     await callback.answer()
     await callback.message.answer(f"✅ Додано файлів: {len(files)}")

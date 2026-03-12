@@ -53,8 +53,14 @@ class Product(models.Model):
         ordering = ["-created_at"]
 
     def __str__(self) -> str:
-        name = self.attributes.get("blade_name", self.attributes.get("name", str(self.id)))
-        return f"{name} ({self.status})"
+        display_name = str(self.id)
+        if self.attributes:
+            # Use the first non-empty attribute value as display name
+            for value in self.attributes.values():
+                if isinstance(value, str) and value:
+                    display_name = value
+                    break
+        return f"{display_name} ({self.status})"
 
     # ── Rich Model behaviour ─────────────────────────────────────────
 

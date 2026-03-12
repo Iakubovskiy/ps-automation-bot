@@ -60,10 +60,14 @@ class CreateProductUseCase:
 
         # ── Upload media to S3 if service is available ───────────────
         attributes = dict(dto.attributes)
+
+        # Generate a stable ID for S3 path (product doesn't exist yet)
+        import uuid as _uuid
+        product_media_id = str(_uuid.uuid4())
+
         if self._s3 and dto.photo_paths:
-            # We'll store S3 keys in attributes for later use
             s3_keys = self._s3.upload_product_media(
-                product_id=attributes.get("product_code", "temp"),
+                product_id=product_media_id,
                 local_paths=dto.photo_paths,
             )
             attributes["photo_s3_keys"] = s3_keys

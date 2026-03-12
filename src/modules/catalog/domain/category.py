@@ -10,7 +10,7 @@ attribute_schema format:
     {
         "key": "steel",
         "label": "Тип сталі",
-        "source_type": "STATIC_DB",     # STATIC_DB | MANUAL
+        "source_type": "STATIC_DB",     # STATIC_DB | MANUAL | AI
         "source_ref": "Steel",          # group_name in StaticReference (for STATIC_DB)
         "data_type": "str",             # str | float | int | list
         "multi_select": false

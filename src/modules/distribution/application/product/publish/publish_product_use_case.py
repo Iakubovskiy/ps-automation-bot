@@ -1,64 +1,71 @@
-"""Use case & Celery task: Publish a Product to all active drivers.
-
-Triggered by ProductCreatedEvent via Celery:
-  1. Looks up Product and all active DistributionDrivers for its org.
-  2. For each driver, find-or-create a manifest.
-  3. Instantiate the appropriate driver class (e.g. HoroshopDriver).
-  4. Execute publish through Playwright.
-"""
+"""Use case & Celery task: Publish a Product to all active drivers."""
 import asyncio
 import logging
 
+from django.apps import apps
 from celery import shared_task
 from django.conf import settings
+from asgiref.sync import sync_to_async
 
 from modules.catalog.domain.product import Product
-from modules.distribution.domain.distribution_manifest import DistributionManifest
 from modules.distribution.infrastructure.driver_repository import DriverRepository
-from modules.distribution.infrastructure.manifest_repository import ManifestRepository
+from modules.distribution.infrastructure.task_repository import TaskRepository
 from modules.distribution.infrastructure.playwright_browser import PlaywrightBrowser
-from modules.distribution.drivers.horoshop_driver import HoroshopDriver
+from modules.distribution.drivers.horoshop.horoshop_driver import HoroshopDriver
+from modules.distribution.infrastructure.manifest.facade.manifest_facade import ManifestFacadeRepository
+from modules.distribution.domain.integrations.horoshop.enums.event_type import EventType
 
 logger = logging.getLogger(__name__)
 
-# Registry of driver_type → driver class
 _DRIVER_REGISTRY: dict[str, type] = {
     "horoshop": HoroshopDriver,
 }
 
 
 class PublishProductUseCase:
-    """Publish a product to all active distribution platforms.
+    """Publish a product to all active distribution platforms."""
 
-    Resolves the driver_type to a concrete driver class,
-    and passes the manifest + product data for publishing.
-    """
+    @sync_to_async
+    def _resolve_labels(self, attributes: dict) -> dict:
+        """Перекладає системні ключі (напр. 'Tanto') у людські лейбли ('Танто') з БД."""
+        try:
+            StaticReference = apps.get_model("catalog", "StaticReference")
+            ref_map = dict(StaticReference.objects.values_list("key", "label"))
+        except LookupError:
+            logger.error("Модель StaticReference не знайдена. Пропускаю переклад лейблів.")
+            return attributes
+
+        resolved = dict(attributes)
+        for k, v in resolved.items():
+            if isinstance(v, str) and v in ref_map:
+                resolved[k] = ref_map[v]
+            elif isinstance(v, list):
+                resolved[k] = [ref_map.get(item, item) if isinstance(item, str) else item for item in v]
+
+        return resolved
 
     async def execute(self, product_id: str) -> None:
-        """Publish to all active drivers for the product's organization.
+        """Publish to all active drivers for the product's organization."""
+        try:
+            product = await Product.objects.select_related("category").aget(pk=product_id)
+        except Product.DoesNotExist:
+            logger.error("Product %s not found. Aborting publish.", product_id)
+            return
 
-        Args:
-            product_id: UUID of the Product to publish.
-        """
-        product = Product.objects.select_related("category").get(pk=product_id)
-
-        drivers = DriverRepository.find_active_by_organization(
+        drivers = await sync_to_async(DriverRepository.find_active_by_organization)(
             str(product.organization_id)
         )
 
         if not drivers:
-            logger.warning(
-                "No active drivers for org %s — skipping publish",
-                product.organization_id,
-            )
+            logger.warning("No active drivers for org %s — skipping publish", product.organization_id)
             return
 
-        # Build the product data dict that drivers consume
+        resolved_attributes = await self._resolve_labels(product.attributes)
+
         product_data = {
             "id": str(product.id),
-            "attributes": product.attributes,
+            "attributes": resolved_attributes,
             "category": product.category.name,
-            "ai_content": product.attributes.get("ai_content", {}),
         }
 
         headless = getattr(settings, "PLAYWRIGHT_HEADLESS", True)
@@ -73,61 +80,65 @@ class PublishProductUseCase:
                     logger.error("Unknown driver_type: %s", driver_type)
                     continue
 
-                # Find or create manifest for this driver + product
-                manifest = ManifestRepository.find_or_create(
-                    driver_id=str(driver_config.id),
-                    product_id=str(product.id),
-                    manifest_config=driver_config.credentials.get(
-                        "default_manifest", {}
-                    ),
+                manifest_data = await sync_to_async(ManifestFacadeRepository.find_for_driver)(
+                    driver_config=driver_config,
+                    category_id=str(product.category_id),
+                    event_type=EventType.CREATE
                 )
 
-                driver = driver_cls(browser)
+                if not manifest_data:
+                    logger.warning(
+                        "No manifest template found for driver %s and category %s. Skipping.",
+                        driver_config.name,
+                        product.category.name
+                    )
+                    continue
+
+                task = await sync_to_async(TaskRepository.find_or_create)(
+                    driver_id=str(driver_config.id),
+                    product_id=str(product.id)
+                )
 
                 logger.info(
-                    "Publishing product %s via %s (%s)",
+                    "Publishing product %s via %s, type: %s",
                     product.id,
                     driver_config.name,
                     driver_type,
                 )
 
+                driver_instance = driver_cls(browser)
+
                 try:
-                    await driver.publish(manifest, product_data)
-                except Exception:
-                    logger.exception(
-                        "Failed to publish product %s via %s",
-                        product.id,
-                        driver_config.name,
+                    await driver_instance.publish(
+                        task=task,
+                        manifest_data=manifest_data,
+                        product_data=product_data,
+                        organization_id=str(product.organization_id),
                     )
+                except Exception as exc:
+                    await sync_to_async(task.mark_failed)(str(exc))
+                    logger.exception("Failed to publish product %s via %s", product.id, driver_config.name)
         finally:
             await browser.close()
 
-
-# ── Celery task (entry point from ProductCreatedEvent) ───────────────
-
 @shared_task(
-    name="handle_product_created_event",
+    name="handle_product_enriched_event",
     bind=True,
     max_retries=3,
     default_retry_delay=60,
 )
-def handle_product_created_event(self, event_data: dict) -> None:
-    """Celery task triggered by ProductCreatedEvent via EventBus.
-
-    Args:
-        event_data: Serialized ProductCreatedEvent dict.
-    """
+def handle_product_enriched_event(self, event_data: dict) -> None:
+    """Listens to ProductEnrichedEvent and starts distribution."""
     product_id = event_data.get("product_id")
     if not product_id:
-        logger.error("ProductCreatedEvent missing product_id: %s", event_data)
         return
 
-    logger.info("Received ProductCreatedEvent for product %s", product_id)
+    logger.info("Received ProductEnrichedEvent for %s. Starting distribution...", product_id)
 
     use_case = PublishProductUseCase()
 
     try:
         asyncio.run(use_case.execute(product_id))
     except Exception as exc:
-        logger.exception("Publish failed for product %s, retrying…", product_id)
+        logger.exception("Publish failed, retrying...")
         raise self.retry(exc=exc)

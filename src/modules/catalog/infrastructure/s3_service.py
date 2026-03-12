@@ -38,3 +38,20 @@ class S3Service:
         self._client.upload_fileobj(file_data, self.bucket_name, s3_key)
         logger.info("Uploaded to s3://%s/%s", self.bucket_name, s3_key)
         return f"{self.bucket_name}/{s3_key}"
+
+    def download_file(self, s3_path: str, local_path: str) -> None:
+        """Завантажує файл з S3 на локальний диск.
+
+        Args:
+            s3_path: Шлях у форматі 'bucket-name/products/uuid/file.jpg'
+                     або 'products/uuid/file.jpg'
+            local_path: Абсолютний шлях на диску, куди зберегти файл.
+        """
+        prefix = f"{self.bucket_name}/"
+        if s3_path.startswith(prefix):
+            s3_key = s3_path[len(prefix):]
+        else:
+            s3_key = s3_path
+
+        self._client.download_file(self.bucket_name, s3_key, local_path)
+        logger.info("Downloaded s3://%s/%s to %s", self.bucket_name, s3_key, local_path)

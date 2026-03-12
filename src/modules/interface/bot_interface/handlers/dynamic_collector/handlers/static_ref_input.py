@@ -16,6 +16,16 @@ async def process_single_ref(callback: types.CallbackQuery, state: FSMContext) -
     collected = data.get("collected", {})
     collected[field["key"]] = key
 
+    # Auto-fill: merge StaticReference.value JSON into collected data
+    if field.get("auto_fill_from_value"):
+        ref = await StaticReferenceRepository.afind_by_key(
+            organization_id=data.get("organization_id", ""),
+            group_name=field.get("source_ref", ""),
+            key=key,
+        )
+        if ref and ref.value:
+            collected.update(ref.value)
+
     await state.update_data(collected=collected, attr_index=data["attr_index"] + 1)
     await callback.answer()
     await callback.message.answer(f"✅ {field.get('label', field['key'])}: {key}")

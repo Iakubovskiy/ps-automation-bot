@@ -84,6 +84,10 @@ CELERY_RESULT_BACKEND = os.getenv("CELERY_RESULT_BACKEND", "redis://redis:6379/0
 CELERY_ACCEPT_CONTENT = ["json"]
 CELERY_TASK_SERIALIZER = "json"
 CELERY_RESULT_SERIALIZER = "json"
+CELERY_IMPORTS = [
+    "modules.distribution.application.product.publish.publish_product_use_case",
+    "modules.catalog.application.product.generate.generate_ai_content_use_case",
+]
 
 # ── MinIO / S3 ───────────────────────────────────────────────────────
 
@@ -108,6 +112,7 @@ MEDIA_ROOT = BASE_DIR / "media"
 
 BOT_TOKEN = os.getenv("bot_token", "")
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
+GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-3-flash-preview")
 TELEGRAM_API_ID = os.getenv("TELEGRAM_API_ID", "")
 TELEGRAM_API_HASH = os.getenv("TELEGRAM_API_HASH", "")
 
@@ -118,13 +123,8 @@ GOOGLE_SERVICE_ACCOUNT_FILE = os.getenv(
     "GOOGLE_SERVICE_ACCOUNT_FILE", "credentials/sheets-access.json"
 )
 
-# ── Horoshop (Playwright publishing) ─────────────────────────────────
+# ── Playwright (browser automation) ──────────────────────────────────
 
-HOROSHOP_STORE_URL = os.getenv(
-    "HOROSHOP_STORE_URL", "https://prostastal.com/edit/products/all"
-)
-HOROSHOP_EMAIL = os.getenv("HOROSHOP_EMAIL", "")
-HOROSHOP_PASSWORD = os.getenv("HOROSHOP_PASSWORD", "")
 PLAYWRIGHT_HEADLESS = os.getenv("PLAYWRIGHT_HEADLESS", "true").lower() in ("true", "1")
 
 # ── Internationalization ─────────────────────────────────────────────
