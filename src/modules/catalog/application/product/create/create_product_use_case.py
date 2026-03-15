@@ -1,6 +1,6 @@
 """Use case: Create a new Product from the bot interface.
 
-Validates collected attributes against the Category's attribute_schema
+Validates collected attributes against the ProductSchema's attribute_schema
 using a dynamically built Pydantic model, then creates the Product entity.
 """
 import logging
@@ -11,7 +11,7 @@ from pydantic import ValidationError, create_model
 from modules.catalog.application.product.create.dto.create_product_dto import (
     CreateProductDto,
 )
-from modules.catalog.domain.category import Category
+from modules.catalog.domain.product_schema import ProductSchema
 from modules.catalog.domain.product import Product
 from modules.catalog.infrastructure.s3_service import S3Service
 
@@ -30,7 +30,7 @@ class CreateProductUseCase:
     """Validates attributes and creates a Product in DRAFT status.
 
     Flow:
-        1. Load the Category and its attribute_schema.
+        1. Load the ProductSchema and its attribute_schema.
         2. Build a dynamic Pydantic model from the schema.
         3. Validate the incoming attributes against it.
         4. Upload media files to S3.
@@ -50,13 +50,13 @@ class CreateProductUseCase:
             The newly created Product instance.
 
         Raises:
-            Category.DoesNotExist: If the category_id is invalid.
+            ProductSchema.DoesNotExist: If the product_schema_id is invalid.
             ValidationError: If attributes don't match the schema.
         """
-        category = Category.objects.get(pk=dto.category_id)
+        product_schema = ProductSchema.objects.get(pk=dto.product_schema_id)
 
         # ── Validate attributes against dynamic schema ───────────────
-        self._validate_attributes(category, dto.attributes)
+        self._validate_attributes(product_schema, dto.attributes)
 
         # ── Upload media to S3 if service is available ───────────────
         attributes = dict(dto.attributes)
@@ -80,21 +80,21 @@ class CreateProductUseCase:
         # ── Create the Product (domain model publishes event) ────────
         product = Product.create(
             organization_id=dto.organization_id,
-            category=category,
+            product_schema=product_schema,
             attributes=attributes,
         )
 
         logger.info(
-            "Created product %s (category=%s, org=%s)",
+            "Created product %s (schema=%s, org=%s)",
             product.id,
-            category.name,
+            product_schema.name,
             dto.organization_id,
         )
 
         return product
 
     @staticmethod
-    def _validate_attributes(category: Category, attributes: dict[str, Any]) -> None:
+    def _validate_attributes(product_schema: ProductSchema, attributes: dict[str, Any]) -> None:
         """Build a dynamic Pydantic model from attribute_schema and validate.
 
         Uses pydantic.create_model() to construct a validation model at runtime.
@@ -103,7 +103,7 @@ class CreateProductUseCase:
         Raises:
             ValidationError: If validation fails.
         """
-        schema = category.attribute_schema
+        schema = product_schema.attribute_schema
         if not schema:
             return  # No schema defined — accept anything
 
@@ -122,7 +122,7 @@ class CreateProductUseCase:
             field_definitions[key] = (python_type | None, None)
 
         DynamicModel = create_model(
-            f"{category.name}AttributeModel",
+            f"{product_schema.name}AttributeModel",
             **field_definitions,
         )
 
@@ -130,8 +130,8 @@ class CreateProductUseCase:
             DynamicModel(**attributes)
         except ValidationError:
             logger.error(
-                "Attribute validation failed for category '%s': %s",
-                category.name,
+                "Attribute validation failed for schema '%s': %s",
+                product_schema.name,
                 attributes,
             )
             raise

@@ -2,7 +2,7 @@ from aiogram import Router, types
 from aiogram.filters import CommandStart
 from aiogram.fsm.context import FSMContext
 from modules.users.domain.user import User as PlatformUser
-from modules.catalog.infrastructure.category_repository import CategoryRepository
+from modules.catalog.infrastructure.product_schema_repository import ProductSchemaRepository
 from modules.interface.bot_interface.keyboards.keyboards import get_category_keyboard
 from services.file_manager import generate_item_uuid
 from modules.interface.bot_interface.states import DynamicCollectorState
@@ -21,10 +21,10 @@ async def cmd_start(message: types.Message, state: FSMContext) -> None:
         return
 
     org_id = str(user.organization_id)
-    categories = await CategoryRepository.afind_by_organization(org_id)
+    schemas = await ProductSchemaRepository.afind_by_organization(org_id)
 
     await state.update_data(item_uuid=generate_item_uuid(), photos=[], collected={}, organization_id=org_id,
                             user_id=str(user.id))
     await message.answer(f"Привіт! Оберіть категорію:",
-                         reply_markup=get_category_keyboard([{"id": c.id, "name": c.name} for c in categories]))
+                         reply_markup=get_category_keyboard([{"id": s.id, "name": s.name} for s in schemas]))
     await state.set_state(DynamicCollectorState.category_select)

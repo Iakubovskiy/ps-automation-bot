@@ -1,4 +1,4 @@
-"""Internal event: a Category was created.
+"""Internal event: a ProductSchema was created.
 
 This event stays within the Catalog module.
 """
@@ -8,8 +8,8 @@ from core.events import DomainEvent
 
 
 @dataclass(frozen=True)
-class CategoryCreatedEvent(DomainEvent):
-    """Fired when a new Category is created."""
+class ProductSchemaCreatedEvent(DomainEvent):
+    """Fired when a new ProductSchema is created."""
 
-    category_id: int = 0
+    product_schema_id: int = 0
     name: str = ""

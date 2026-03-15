@@ -12,7 +12,7 @@ class CreateProductRequestSchema(Schema):
     """Request body for product creation."""
 
     organization_id: str
-    category_id: int
+    product_schema_id: int
     attributes: dict[str, Any]
     photo_paths: list[str] = []
     video_path: str = ""
@@ -31,7 +31,7 @@ def create_product(request, payload: CreateProductRequestSchema):
     """Create a new product."""
     dto = CreateProductDto(
         organization_id=payload.organization_id,
-        category_id=payload.category_id,
+        product_schema_id=payload.product_schema_id,
         attributes=payload.attributes,
         photo_paths=payload.photo_paths,
         video_path=payload.video_path,

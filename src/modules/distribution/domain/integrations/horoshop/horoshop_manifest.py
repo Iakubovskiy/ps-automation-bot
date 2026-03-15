@@ -14,10 +14,10 @@ class HoroshopManifest(models.Model):
         on_delete=models.CASCADE,
         related_name="horoshop_manifests",
     )
-    category_id = models.CharField(
+    product_schema_id = models.CharField(
         max_length=255,
         db_index=True,
-        help_text="Identifier of the Category this manifest applies to",
+        help_text="Identifier of the ProductSchema this manifest applies to",
     )
     event_type = models.CharField(
         max_length=16,
@@ -31,7 +31,7 @@ class HoroshopManifest(models.Model):
         db_table = "distribution_horoshop_manifest"
         verbose_name = "Horoshop Manifest"
         verbose_name_plural = "Horoshop Manifests"
-        unique_together = [["driver", "category_id", "event_type"]]
+        unique_together = [["driver", "product_schema_id", "event_type"]]
 
     def __str__(self) -> str:
-        return f"Horoshop {self.event_type} | Category: {self.category_id}"
+        return f"Horoshop {self.event_type} | Schema: {self.product_schema_id}"

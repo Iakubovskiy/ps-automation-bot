@@ -1,6 +1,6 @@
 """Use case & Celery task: Generate AI content for a Product.
 
-Listens to ProductCreatedEvent, calls Gemini with the Category's system_prompt
+Listens to ProductCreatedEvent, calls Gemini with the ProductSchema's system_prompt
 and collected attributes + photos, then stores AI results in Product.attributes
 and fires ProductEnrichedEvent to trigger distribution.
 """
@@ -23,11 +23,33 @@ from modules.catalog.infrastructure.gemini_service import (
 logger = logging.getLogger(__name__)
 
 
+def _get_rozetka_instructions(organization_id: str) -> str:
+    """Load Rozetka-specific AI instructions if an active Rozetka feed config exists."""
+    try:
+        from modules.distribution.domain.integrations.rozetka.rozetka_feed_config import RozetkaFeedConfig
+        config = RozetkaFeedConfig.objects.filter(
+            driver__organization_id=organization_id,
+            driver__status="ACTIVE",
+        ).first()
+        if not config:
+            return ""
+
+        parts = []
+        if config.rozetka_name_instructions:
+            parts.append(config.rozetka_name_instructions)
+        if config.rozetka_description_instructions:
+            parts.append(config.rozetka_description_instructions)
+        return "\n\n".join(parts)
+    except Exception:
+        logger.debug("Could not load Rozetka instructions", exc_info=True)
+        return ""
+
+
 class GenerateAiContentUseCase:
     """Generate AI content for a product using Gemini.
 
     Flow:
-        1. Load Product with Category
+        1. Load Product with ProductSchema
         2. mark_ai_processing()
         3. Download photos from S3
         4. Call GeminiService with system_prompt + collected attributes + photos
@@ -41,18 +63,18 @@ class GenerateAiContentUseCase:
     async def execute(self, product_id: str) -> None:
         """Run AI content generation for the given product."""
         try:
-            product = await Product.objects.select_related("category").aget(pk=product_id)
+            product = await Product.objects.select_related("product_schema").aget(pk=product_id)
         except Product.DoesNotExist:
             logger.error("Product %s not found. Aborting AI generation.", product_id)
             return
 
-        category = product.category
-        system_prompt = category.system_prompt
+        product_schema = product.product_schema
+        system_prompt = product_schema.system_prompt
 
         if not system_prompt:
             logger.warning(
-                "Category '%s' has no system_prompt. Skipping AI generation for product %s.",
-                category.name,
+                "ProductSchema '%s' has no system_prompt. Skipping AI generation for product %s.",
+                product_schema.name,
                 product_id,
             )
             EventBus.publish(
@@ -62,6 +84,13 @@ class GenerateAiContentUseCase:
                 )
             )
             return
+
+        # Append Rozetka-specific AI instructions if configured
+        rozetka_instructions = await sync_to_async(_get_rozetka_instructions)(
+            str(product.organization_id)
+        )
+        if rozetka_instructions:
+            system_prompt = f"{system_prompt}\n\n{rozetka_instructions}"
 
         await sync_to_async(product.mark_ai_processing)()
 

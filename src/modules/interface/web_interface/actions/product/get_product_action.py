@@ -13,7 +13,7 @@ class ProductDetailSchema(Schema):
 
     id: str
     organization_id: str
-    category_id: int
+    product_schema_id: int
     status: str
     attributes: dict[str, Any]
     created_at: str
@@ -27,7 +27,7 @@ def get_product(request, product_id: str):
     return ProductDetailSchema(
         id=str(product.id),
         organization_id=str(product.organization_id),
-        category_id=product.category_id,
+        product_schema_id=product.product_schema_id,
         status=product.status,
         attributes=product.attributes,
         created_at=product.created_at.isoformat(),

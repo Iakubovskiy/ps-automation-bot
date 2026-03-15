@@ -25,12 +25,12 @@ class ProductRepository:
         return list(qs.order_by("-created_at"))
 
     @staticmethod
-    def find_by_category(
-        category_id: int,
+    def find_by_product_schema(
+        product_schema_id: int,
         organization_id: str | None = None,
     ) -> list[Product]:
-        """Return products in a category, optionally scoped to an organization."""
-        qs = Product.objects.filter(category_id=category_id)
+        """Return products for a schema, optionally scoped to an organization."""
+        qs = Product.objects.filter(product_schema_id=product_schema_id)
         if organization_id:
             qs = qs.filter(organization_id=organization_id)
         return list(qs.order_by("-created_at"))

@@ -14,21 +14,21 @@ class ManifestFacadeRepository:
     """Routes manifest lookups based on driver type."""
 
     @staticmethod
-    def find_for_driver(driver_config: DistributionDriver, category_id: str, event_type: EventType):
+    def find_for_driver(driver_config: DistributionDriver, product_schema_id: str, event_type: EventType):
         """Finds the appropriate manifest for any driver type."""
 
         if driver_config.driver_type == "horoshop":
             try:
-                manifest = HoroshopManifestRepository.find_by_category_and_event(
+                manifest = HoroshopManifestRepository.find_by_product_schema_and_event(
                     driver_id=str(driver_config.id),
-                    category_id=category_id,
+                    product_schema_id=product_schema_id,
                     event_type=event_type
                 )
                 return list(manifest.steps.all())
             except ObjectDoesNotExist:
                 logger.warning(
-                    "HoroshopManifest not found for driver_id=%s, category_id=%s, event=%s",
-                    driver_config.id, category_id, event_type
+                    "HoroshopManifest not found for driver_id=%s, product_schema_id=%s, event=%s",
+                    driver_config.id, product_schema_id, event_type
                 )
                 return None
         return None

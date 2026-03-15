@@ -1,4 +1,4 @@
-"""Internal event: a Category was deleted.
+"""Internal event: a ProductSchema was deleted.
 
 This event stays within the Catalog module.
 """
@@ -8,8 +8,8 @@ from core.events import DomainEvent
 
 
 @dataclass(frozen=True)
-class CategoryDeletedEvent(DomainEvent):
-    """Fired when a Category is removed."""
+class ProductSchemaDeletedEvent(DomainEvent):
+    """Fired when a ProductSchema is removed."""
 
-    category_id: int = 0
+    product_schema_id: int = 0
     name: str = ""

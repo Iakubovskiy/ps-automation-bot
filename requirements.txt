@@ -29,3 +29,6 @@ playwright>=1.40
 
 # HTTP
 aiohttp
+
+# Testing
+pytest>=8.0

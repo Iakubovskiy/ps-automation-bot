@@ -1,7 +1,7 @@
 """Product domain entity.
 
-A Product is the central PIM entity — it belongs to an Organization and a Category.
-Its attributes are stored as a JSON blob, validated against the Category's attribute_schema.
+A Product is the central PIM entity — it belongs to an Organization and a ProductSchema.
+Its attributes are stored as a JSON blob, validated against the ProductSchema's attribute_schema.
 """
 import uuid
 
@@ -28,14 +28,14 @@ class Product(models.Model):
         db_index=True,
         help_text="FK to Organization (denormalized from Users module via events)",
     )
-    category = models.ForeignKey(
-        "catalog.Category",
+    product_schema = models.ForeignKey(
+        "catalog.ProductSchema",
         on_delete=models.PROTECT,
         related_name="products",
     )
     attributes = models.JSONField(
         default=dict,
-        help_text="Collected data — validated against Category.attribute_schema",
+        help_text="Collected data — validated against ProductSchema.attribute_schema",
     )
     status = models.CharField(
         max_length=16,
@@ -68,13 +68,13 @@ class Product(models.Model):
     def create(
         cls,
         organization_id: str,
-        category: "Category",
+        product_schema: "ProductSchema",
         attributes: dict,
     ) -> "Product":
         """Factory: create a Product in DRAFT status and publish ProductCreatedEvent."""
         product = cls.objects.create(
             organization_id=organization_id,
-            category=category,
+            product_schema=product_schema,
             attributes=attributes,
             status=ProductStatus.DRAFT,
         )
@@ -82,7 +82,7 @@ class Product(models.Model):
             ProductCreatedEvent(
                 product_id=str(product.id),
                 organization_id=str(product.organization_id),
-                category_id=product.category_id,
+                product_schema_id=product.product_schema_id,
             )
         )
         return product

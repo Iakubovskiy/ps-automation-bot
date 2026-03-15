@@ -7,16 +7,16 @@ class HoroshopManifestRepository:
     """Query interface for Horoshop Manifest entities."""
 
     @staticmethod
-    def find_by_category_and_event(
+    def find_by_product_schema_and_event(
             driver_id: str,
-            category_id: str,
+            product_schema_id: str,
             event_type: EventType = EventType.CREATE
     ) -> HoroshopManifest:
         """Find a specific manifest and eagerly load its ordered steps.
 
         Args:
             driver_id: ID of the DistributionDriver (the connection).
-            category_id: Category ID from the Catalog.
+            product_schema_id: ProductSchema ID from the Catalog.
             event_type: The trigger event (e.g., CREATE, UPDATE).
 
         Raises:
@@ -24,6 +24,6 @@ class HoroshopManifestRepository:
         """
         return HoroshopManifest.objects.prefetch_related("steps").get(
             driver_id=driver_id,
-            category_id=category_id,
+            product_schema_id=product_schema_id,
             event_type=event_type,
         )

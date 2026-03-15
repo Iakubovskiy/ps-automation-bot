@@ -13,7 +13,7 @@ async def finalize_creation(message: types.Message, state: FSMContext) -> None:
 
     dto = CreateProductDto(
         organization_id=data.get("organization_id", ""),
-        category_id=data["category_id"],
+        product_schema_id=data["product_schema_id"],
         attributes=data.get("collected", {}),
         photo_paths=data.get("photos", []),
         video_path=data.get("video_path", ""),

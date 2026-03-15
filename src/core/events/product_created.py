@@ -14,4 +14,4 @@ class ProductCreatedEvent(DomainEvent):
 
     product_id: str = ""
     organization_id: str = ""
-    category_id: int = 0
+    product_schema_id: int = 0

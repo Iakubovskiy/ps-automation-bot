@@ -1,6 +1,6 @@
-"""CategoryAttribute — structured inline model replacing raw JSON attribute_schema.
+"""ProductSchemaField — structured inline model replacing raw JSON attribute_schema.
 
-Each row represents one field in the category's data collection schema,
+Each row represents one field in the product schema's data collection schema,
 with proper form controls in Django admin (dropdowns, checkboxes, text inputs).
 """
 from django.db import models
@@ -8,16 +8,16 @@ from django.db import models
 from core.attribute_schema import SourceType, DataType
 
 
-class CategoryAttribute(models.Model):
-    """A single attribute field definition within a Category's schema."""
+class ProductSchemaField(models.Model):
+    """A single attribute field definition within a ProductSchema."""
 
     SOURCE_TYPE_CHOICES = [(s.value, s.value) for s in SourceType]
     DATA_TYPE_CHOICES = [(d.value, d.value) for d in DataType]
 
-    category = models.ForeignKey(
-        "catalog.Category",
+    product_schema = models.ForeignKey(
+        "catalog.ProductSchema",
         on_delete=models.CASCADE,
-        related_name="attributes",
+        related_name="fields",
     )
     order = models.PositiveIntegerField(
         default=0,
@@ -46,7 +46,7 @@ class CategoryAttribute(models.Model):
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
-        related_name="category_attributes",
+        related_name="product_schema_fields",
         verbose_name="Source group",
         help_text="StaticReferenceGroup to pull options from (for STATIC_DB)",
     )
@@ -64,11 +64,11 @@ class CategoryAttribute(models.Model):
     )
 
     class Meta:
-        db_table = "catalog_category_attribute"
-        verbose_name = "Category Attribute"
-        verbose_name_plural = "Category Attributes"
+        db_table = "catalog_productschemafield"
+        verbose_name = "Product Schema Field"
+        verbose_name_plural = "Product Schema Fields"
         ordering = ["order", "pk"]
-        unique_together = [("category", "key")]
+        unique_together = [("product_schema", "key")]
 
     def __str__(self) -> str:
         return f"{self.key} ({self.source_type})"

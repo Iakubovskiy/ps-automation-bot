@@ -1,6 +1,6 @@
-"""Category domain entity.
+"""ProductSchema domain entity.
 
-A Category defines a product type (e.g. "Hunting Knife", "EDC Knife").
+A ProductSchema defines a product data collection structure (fields, AI prompt, attribute schema).
 It contains:
   - system_prompt: AI instruction text for Gemini content generation
   - attribute_schema: JSON schema driving the dynamic bot FSM dialog
@@ -28,13 +28,13 @@ attribute_schema format:
 from django.db import models
 
 
-class Category(models.Model):
-    """A product category with an AI prompt and dynamic attribute schema."""
+class ProductSchema(models.Model):
+    """A product schema with an AI prompt and dynamic attribute schema."""
 
     organization = models.ForeignKey(
         "users.Organization",
         on_delete=models.CASCADE,
-        related_name="categories",
+        related_name="product_schemas",
     )
     name = models.CharField(max_length=255)
     system_prompt = models.TextField(
@@ -48,9 +48,9 @@ class Category(models.Model):
     )
 
     class Meta:
-        db_table = "catalog_category"
-        verbose_name = "Category"
-        verbose_name_plural = "Categories"
+        db_table = "catalog_productschema"
+        verbose_name = "Product Schema"
+        verbose_name_plural = "Product Schemas"
         unique_together = [("organization", "name")]
 
     def __str__(self) -> str:
@@ -59,11 +59,11 @@ class Category(models.Model):
     # ── Rich Model behaviour ─────────────────────────────────────────
 
     def get_attribute_schema(self) -> list[dict]:
-        """Build attribute_schema from related CategoryAttribute records.
+        """Build attribute_schema from related ProductSchemaField records.
 
         Falls back to the JSON field if no inline attributes exist.
         """
-        attrs = list(self.attributes.all().order_by("order", "pk"))
+        attrs = list(self.fields.all().order_by("order", "pk"))
         if attrs:
             return [a.to_schema_dict() for a in attrs]
         return self.attribute_schema or []
@@ -71,7 +71,7 @@ class Category(models.Model):
     async def aget_attribute_schema(self) -> list[dict]:
         """Async version of get_attribute_schema with pre-fetched relations."""
         attrs = [
-            a async for a in self.attributes.select_related("source_ref_group")
+            a async for a in self.fields.select_related("source_ref_group")
             .all()
             .order_by("order", "pk")
         ]

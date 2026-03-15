@@ -21,6 +21,8 @@ _DRIVER_REGISTRY: dict[str, type] = {
     "horoshop": HoroshopDriver,
 }
 
+PASSIVE_DRIVERS = {"rozetka"}
+
 
 class PublishProductUseCase:
     """Publish a product to all active distribution platforms."""
@@ -47,7 +49,7 @@ class PublishProductUseCase:
     async def execute(self, product_id: str) -> None:
         """Publish to all active drivers for the product's organization."""
         try:
-            product = await Product.objects.select_related("category").aget(pk=product_id)
+            product = await Product.objects.select_related("product_schema").aget(pk=product_id)
         except Product.DoesNotExist:
             logger.error("Product %s not found. Aborting publish.", product_id)
             return
@@ -65,7 +67,7 @@ class PublishProductUseCase:
         product_data = {
             "id": str(product.id),
             "attributes": resolved_attributes,
-            "category": product.category.name,
+            "product_schema": product.product_schema.name,
         }
 
         headless = getattr(settings, "PLAYWRIGHT_HEADLESS", True)
@@ -74,6 +76,14 @@ class PublishProductUseCase:
         try:
             for driver_config in drivers:
                 driver_type = driver_config.driver_type
+
+                if driver_type in PASSIVE_DRIVERS:
+                    logger.info(
+                        "Skipping passive driver %s (%s) for product %s",
+                        driver_config.name, driver_type, product.id,
+                    )
+                    continue
+
                 driver_cls = _DRIVER_REGISTRY.get(driver_type)
 
                 if not driver_cls:
@@ -82,15 +92,15 @@ class PublishProductUseCase:
 
                 manifest_data = await sync_to_async(ManifestFacadeRepository.find_for_driver)(
                     driver_config=driver_config,
-                    category_id=str(product.category_id),
+                    product_schema_id=str(product.product_schema_id),
                     event_type=EventType.CREATE
                 )
 
                 if not manifest_data:
                     logger.warning(
-                        "No manifest template found for driver %s and category %s. Skipping.",
+                        "No manifest template found for driver %s and schema %s. Skipping.",
                         driver_config.name,
-                        product.category.name
+                        product.product_schema.name
                     )
                     continue
 

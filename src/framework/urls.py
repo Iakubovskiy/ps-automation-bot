@@ -13,14 +13,17 @@ from modules.interface.web_interface.actions.product.get_product_action import (
 from modules.interface.web_interface.actions.product.create_product_action import (
     router as create_product_router,
 )
-from modules.interface.web_interface.actions.category.list_categories_action import (
-    router as list_categories_router,
+from modules.interface.web_interface.actions.product_schema.list_product_schemas_action import (
+    router as list_product_schemas_router,
 )
-from modules.interface.web_interface.actions.category.get_category_action import (
-    router as get_category_router,
+from modules.interface.web_interface.actions.product_schema.get_product_schema_action import (
+    router as get_product_schema_router,
 )
 from modules.interface.web_interface.actions.static_reference.list_static_references_action import (
     router as list_static_refs_router,
+)
+from modules.distribution.infrastructure.integrations.rozetka.rozetka_feed_view import (
+    rozetka_feed_view,
 )
 
 api = NinjaAPI(
@@ -33,11 +36,12 @@ api = NinjaAPI(
 api.add_router("", list_products_router)
 api.add_router("", get_product_router)
 api.add_router("", create_product_router)
-api.add_router("", list_categories_router)
-api.add_router("", get_category_router)
+api.add_router("", list_product_schemas_router)
+api.add_router("", get_product_schema_router)
 api.add_router("", list_static_refs_router)
 
 urlpatterns = [
     path("admin/", admin.site.urls),
     path("api/", api.urls),
+    path("feed/rozetka/<str:feed_token>/", rozetka_feed_view, name="rozetka_feed"),
 ]

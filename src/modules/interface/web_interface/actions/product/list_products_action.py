@@ -11,7 +11,7 @@ class ProductListItemSchema(Schema):
     """Response schema for a product list item."""
 
     id: str
-    category_id: int
+    product_schema_id: int
     status: str
     attributes: dict[str, Any]
     created_at: str
@@ -27,7 +27,7 @@ def list_products(request, organization_id: str, status: str = None):
     return [
         ProductListItemSchema(
             id=str(p.id),
-            category_id=p.category_id,
+            product_schema_id=p.product_schema_id,
             status=p.status,
             attributes=p.attributes,
             created_at=p.created_at.isoformat(),
